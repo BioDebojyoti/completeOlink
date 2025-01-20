@@ -1,29 +1,34 @@
 rm(list = ls())
 
-pacman::p_load(
-  shiny,
-  DT,
-  comprehenr,
-  dplyr,
-  readr,
-  stringr,
-  tidyverse,
-  tidyr,
-  EnhancedVolcano,
-  ggplot2, 
-  plotly,
-  webshot,
-  org.Hs.eg.db,
-  clusterProfiler,
-  enrichR,
-  enrichplot,
-  this.path,
-  shinyauthr,
-  shinyBS,
-  bslib,
-  OlinkAnalyze,
-  plotly
+list_of_packages1 <- c(
+  "shiny",
+  "DT",
+  "comprehenr",
+  "dplyr",
+  "readr",
+  "stringr",
+  "tidyverse",
+  "tidyr",
+  "EnhancedVolcano",
+  "ggplot2", 
+  "plotly",
+  "webshot",
+  "org.Hs.eg.db",
+  "clusterProfiler",
+  "enrichR",
+  "enrichplot",
+  "this.path",
+  "shinyauthr",
+  "shinyBS",
+  "bslib",
+  "OlinkAnalyze",
+  "plotly"
 )
+
+for(pkg1 in list_of_packages1){
+  library(pkg1, character.only = TRUE)
+}
+
 
 source("R/functions.R")
 

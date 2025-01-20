@@ -1,12 +1,16 @@
-pacman::p_load(
-  comprehenr,
-  dplyr,
-  stringr,
-  tidyverse,
-  tidyr,
-  factoextra,
-  ggtext
-  )
+list_of_packages2 <- c(
+  "comprehenr",
+  "dplyr",
+  "stringr",
+  "tidyverse",
+  "tidyr",
+  "factoextra",
+  "ggtext"
+)
+
+for(pkg2 in list_of_packages2){
+  library(pkg2, character.only = TRUE)
+}
 
 not_sample_label <- c(
   "SampleID",
