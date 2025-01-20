@@ -605,10 +605,13 @@ server <- function(input, output, session) {
     req(
       test_output(), 
       input$variable_col, 
-      input$test_col %in% c("olink_ttest", "olink_wilcox")
+      input$test_col 
     )
-    if(input$test_col %in% c("olink_anova")){
-      plot_msg("Try olink_anova_posthoc analysis for visualization")
+    if(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric")){
+      # plot_msg("Try ",input$test_col,"_posthoc analysis for visualization")
+      plot_msg(
+        paste0("Try <span style='color:green;'>", input$test_col, "</span>_posthoc analysis for visualization")
+        )
     } else {
       statistical_test_plot(test_output(), input$variable_col, input$test_col)
     }

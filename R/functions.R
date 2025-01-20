@@ -567,20 +567,6 @@ posthoc_statistics <- function(
   
   df <- as.data.frame(df)
   
-  # print(str(df))
-  # print(posthoc_effect)
-  # print(posthoc_effect_formula)  
-  # print(panel_col)
-  # print(test_col)
-  # print(variable)
-  # print(olink_list)
-  # print(covariate_val)
-  # print(posthoc_model_formula)
-  # print(random_list)
-  # print(return_mean)
-  # print(posthoc_padj_method)
-  # print(posthoc_test)
-  
   
   if(panel_col != "all"){
     df <- df %>% dplyr::filter(Panel == panel_col)
