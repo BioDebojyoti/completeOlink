@@ -622,7 +622,7 @@ server <- function(input, output, session) {
   
   
   output$use_olink_ids_ui <- renderUI({
-    req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), test_output()) # Ensure full_data() is available
+    req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric"), test_output()) # Ensure full_data() is available
     radioButtons( 
       "use_olink_ids", 
       "Use specific OlinkIDs", 
@@ -631,12 +631,12 @@ server <- function(input, output, session) {
   })
   
   output$filter_term_olink_ids_ui <- renderUI({
-    req(test_output(), input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), input$use_olink_ids == TRUE)
+    req(test_output(), input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric"), input$use_olink_ids == TRUE)
     selectInput("filter_term_olink_ids", "Term to filter on", choices = test_output() %>% dplyr::distinct(term) %>% dplyr::pull(term), multiple = FALSE)
   })
   
   olink_ids_to_use <- reactive({
-    req(test_output(), input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), input$use_olink_ids == TRUE)
+    req(test_output(), input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric"), input$use_olink_ids == TRUE)
     if(is.null(input$filter_term_olink_ids) | input$filter_term_olink_ids == ""){
       test_output() %>% 
         dplyr::filter(Threshold == 'Significant') %>%

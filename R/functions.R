@@ -564,34 +564,37 @@ posthoc_statistics <- function(
   posthoc_padj_method = NULL,
   posthoc_test = NULL
 ){
-  print(str(df))
-  print(posthoc_effect)
-  print(posthoc_effect_formula)  
-  print(panel_col)
-  print(test_col)
-  print(variable)
-  print(olink_list)
-  print(covariate_val)
-  print(posthoc_model_formula)
-  print(random_list)
-  print(return_mean)
-  print(posthoc_padj_method)
-  print(posthoc_test)
+  
+  df <- as.data.frame(df)
+  
+  # print(str(df))
+  # print(posthoc_effect)
+  # print(posthoc_effect_formula)  
+  # print(panel_col)
+  # print(test_col)
+  # print(variable)
+  # print(olink_list)
+  # print(covariate_val)
+  # print(posthoc_model_formula)
+  # print(random_list)
+  # print(return_mean)
+  # print(posthoc_padj_method)
+  # print(posthoc_test)
   
   
   if(panel_col != "all"){
     df <- df %>% dplyr::filter(Panel == panel_col)
   }
   
+  df <- df %>%
+    dplyr::filter(!(grepl("control|ctrl", SampleID, ignore.case = TRUE))) %>%
+    dplyr::filter(!(grepl("control|ctrl", Assay, ignore.case = TRUE)))
+  
   if(test_col == "olink_anova"){
-    
-    df <- df %>%
-      dplyr::filter(!stringr::str_detect(SampleID, stringr::regex("control|ctrl", ignore_case = TRUE))) %>%
-      dplyr::filter(!stringr::str_detect(Assay, stringr::regex("control|ctrl", ignore_case = TRUE)))
     
     if(is.null(posthoc_model_formula) | posthoc_model_formula == ""){
       if(is.null(posthoc_effect)){
-        print("anova option: 1")
+        # print("anova option: 1")
         out <- OlinkAnalyze::olink_anova_posthoc(
           df = df,
           olinkid_list = olink_list,
@@ -602,7 +605,7 @@ posthoc_statistics <- function(
           post_hoc_padjust_method = posthoc_padj_method
         )
       } else {
-        print("anova option: 2")
+        # print("anova option: 2")
         out <- OlinkAnalyze::olink_anova_posthoc(
           df = df,
           olinkid_list = olink_list,
@@ -616,7 +619,7 @@ posthoc_statistics <- function(
       }
     } else {
       if(is.null(posthoc_effect)){
-        print("anova option: 3")
+        # print("anova option: 3")
         out <- OlinkAnalyze::olink_anova_posthoc(
           df = df,
           olinkid_list = olink_list,
@@ -626,7 +629,7 @@ posthoc_statistics <- function(
           post_hoc_padjust_method = posthoc_padj_method
         )
       } else {
-        print("anova option: 4")
+        # print("anova option: 4")
         out <- OlinkAnalyze::olink_anova_posthoc(
           df = df,
           olinkid_list = olink_list,
@@ -642,13 +645,9 @@ posthoc_statistics <- function(
   
   if(test_col == "olink_lmer"){
     
-    df <- df %>%
-      dplyr::filter(!stringr::str_detect(SampleID, stringr::regex("control|ctrl", ignore_case = TRUE))) %>%
-      dplyr::filter(!stringr::str_detect(Assay, stringr::regex("control|ctrl", ignore_case = TRUE)))
-    
     if(is.null(posthoc_model_formula) | posthoc_model_formula == ""){
       if(is.null(posthoc_effect)){
-        print("lmer option: 1")
+        # print("lmer option: 1")
         out <- OlinkAnalyze::olink_lmer_posthoc(
           df = df,
           olinkid_list = olink_list,
@@ -660,7 +659,7 @@ posthoc_statistics <- function(
           post_hoc_padjust_method = posthoc_padj_method
         )
       } else {
-        print("lmer option: 2")
+        # print("lmer option: 2")
         out <- OlinkAnalyze::olink_lmer_posthoc(
           df = df,
           olinkid_list = olink_list,
@@ -675,7 +674,7 @@ posthoc_statistics <- function(
       }
     } else {
       if(is.null(posthoc_effect)){
-        print("lmer option: 3")
+        # print("lmer option: 3")
         out <- OlinkAnalyze::olink_lmer_posthoc(
           df = df,
           olinkid_list = olink_list,
@@ -686,7 +685,7 @@ posthoc_statistics <- function(
           post_hoc_padjust_method = posthoc_padj_method
         )
       } else {
-        print("lmer option: 4")
+        # print("lmer option: 4")
         out <- OlinkAnalyze::olink_lmer_posthoc(
           df = df,
           olinkid_list = olink_list,
@@ -703,35 +702,43 @@ posthoc_statistics <- function(
   
   if(test_col == "olink_ordinalRegression"){
     
-    df <- df %>%
-      dplyr::filter(!stringr::str_detect(SampleID, stringr::regex("control|ctrl", ignore_case = TRUE))) %>%
-      dplyr::filter(!stringr::str_detect(Assay, stringr::regex("control|ctrl", ignore_case = TRUE)))
+    if(is.null(posthoc_effect)){
+      # print("ordinalRegression option: 1")
+      out <- OlinkAnalyze::olink_ordinalRegression_posthoc(
+        df = df,
+        olinkid_list = olink_list,
+        variable = variable,
+        covariates = covariate_val,
+        effect_formula = posthoc_effect_formula,
+        mean_return = as.logical(return_mean),
+        post_hoc_padjust_method = posthoc_padj_method
+      )
+    } else {
+      # print("ordinalRegression option: 2")
+      out <- OlinkAnalyze::olink_ordinalRegression_posthoc(
+        df = df,
+        olinkid_list = olink_list,
+        variable = variable,
+        covariates = covariate_val,
+        effect = posthoc_effect,
+        mean_return = as.logical(return_mean),
+        post_hoc_padjust_method = posthoc_padj_method
+      )
+    }
+  }
+  
+  if(test_col == "olink_one_non_parametric"){
     
-      if(is.null(posthoc_effect)){
-        print("ordinalRegression option: 1")
-        out <- OlinkAnalyze::olink_ordinalRegression_posthoc(
-          df = df,
-          olinkid_list = olink_list,
-          variable = variable,
-          covariates = covariate_val,
-          effect_formula = posthoc_effect_formula,
-          mean_return = as.logical(return_mean),
-          post_hoc_padjust_method = posthoc_padj_method
-        )
-      } else {
-        print("ordinalRegression option: 2")
-        out <- OlinkAnalyze::olink_ordinalRegression_posthoc(
-          df = df,
-          olinkid_list = olink_list,
-          variable = variable,
-          covariates = covariate_val,
-          effect = posthoc_effect,
-          mean_return = as.logical(return_mean),
-          post_hoc_padjust_method = posthoc_padj_method
-        )
-      }
-    } 
-
+      # print("one_non_parametric option: 1")
+      out <- OlinkAnalyze::olink_one_non_parametric_posthoc(
+        df = df,
+        olinkid_list = olink_list,
+        variable = variable,
+        test = posthoc_test
+      )
+  }
+  
+  return(out)
   
 }
 
