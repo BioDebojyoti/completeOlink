@@ -13,12 +13,7 @@ list_of_packages1 <- c(
   "ggplot2", 
   "plotly",
   "webshot",
-  "org.Hs.eg.db",
-  "clusterProfiler",
-  "enrichR",
-  "enrichplot",
   "this.path",
-  "shinyauthr",
   "shinyBS",
   "bslib",
   "OlinkAnalyze",
@@ -34,38 +29,14 @@ source("R/functions.R")
 
 options(shiny.maxRequestSize=80*1024^2)
 
-user_base <- tibble::tibble(
-  user = c("researcher1", "researcher2", "researcher3"),
-  password = sapply(c("plasma1", "mth1", "lysate1"), sodium::password_store),
-  permissions = c("standard", "standard", "standard"),
-  name = c("User One", "User Two", "User Three")
-)
-
 ui <- fluidPage(
-  # div(class = "pull-right", shinyauthr::logoutUI(id = "logout")),
-  
-  # shinyauthr::loginUI(id = "login"),
-  uiOutput("olink_data"),
-  # div(class = "pull-right", shinyauthr::logoutUI(id = "logout"))
-  
+  uiOutput("olink_data")
 )
 
 
 server <- function(input, output, session) {
-  credentials <- shinyauthr::loginServer(
-    id = "login",
-    data = user_base,
-    user_col = user,
-    pwd_col = password,
-    sodium_hashed = TRUE,
-    log_out = reactive(logout_init())
-  )
-  
-  # Logout to hide
-  logout_init <- shinyauthr::logoutServer(id = "logout", active = reactive(credentials()$user_auth))
-  
+
   output$olink_data <- renderUI({
-    # req(credentials()$user_auth)
     navbarPage(" ",
                id = "olink_data",
                tabPanel("Olink View", fluidPage(
@@ -203,8 +174,7 @@ server <- function(input, output, session) {
                    ),
                    tabsetPanel(
                      tabPanel("Statistical test result", DT::dataTableOutput("test_result")),
-                     tabPanel("Statistical test plot", plotlyOutput("statistical_test_plot_out", height = "600px", width = "800px")
-                     )
+                     tabPanel("Statistical test log", uiOutput("test_log"))
                    )
                  )
                )
@@ -229,17 +199,51 @@ server <- function(input, output, session) {
                   ),
                   tabsetPanel(
                     tabPanel("Posthoc Statistical test result", DT::dataTableOutput("posthoc_test_result")),
-                    tabPanel("Posthoc Statistical test plot", plotlyOutput("posthoc_statistical_test_plot_out", height = "600px", width = "800px")
+                    tabPanel("Posthoc Statistical test log", uiOutput("posthoc_test_log"))
+                  )
+                )
+              )
+              ),
+              tabPanel("Visualization", fluidPage(
+                page_sidebar(
+                  "",
+                  sidebar = sidebar(
+                    uiOutput("statistical_test_boxplot_variable_ui"),
+                    uiOutput("statistical_test_boxplot_olink_ui"),
+                    uiOutput("statistical_test_boxplot_number_ui"), 
+                    uiOutput("statistical_test_boxplot_run_ui"),
+                    hr(),
+                    # Conditional download options
+                    conditionalPanel(
+                      condition = "input.generate_boxplot > 0",
+                      h4("Download Options"),
+                      numericInput("download_width", "Width (inches)", value = 8, min = 1),
+                      numericInput("download_height", "Height (inches)", value = 6, min = 1),
+                      selectInput("download_type", "File Type", choices = c("pdf", "png", "jpg")),
+                      downloadButton("download_plot", "Download Plot")
+                    )
+                  ),
+                  tabsetPanel(
+                    tabPanel("Statistical test plot", 
+                             div(
+                               style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;",
+                               plotlyOutput("statistical_test_plot_out", height = "1000px", width = "1200px")
+                             )
+                    ),
+                    tabPanel("Boxplot", 
+                             div(
+                               style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;",
+                               plotOutput("statistical_test_boxplot_out", height = "1000px", width = "1000px")
+                               )
                     )
                   )
                 )
               )
+              )
             )
-    )
   })
   
   # info button
-  # observeEvent(req(credentials()$user_auth, input$info_btn), {
   observeEvent(req( input$info_btn), {
       showModal(modalDialog(
       title = "OLINK File Format",
@@ -596,14 +600,34 @@ server <- function(input, output, session) {
   output$test_result <- DT::renderDataTable({
     req(test_output(),input$test_col, input$run_test)
     datatable(
-      test_output() %>% 
+      test_output()[[1]] %>% 
         as.data.frame() %>%
         dplyr::mutate(across(where(is.numeric), ~ round(., 3))),
       caption = gsub("_"," ",input$test_col),
-      filter = "top"
+      filter = "top", 
+      extensions = 'Buttons', 
+      options = list(
+        dom = 'Bflrtip',
+        buttons = list('copy', 'csv', 'excel', list(
+          extend = "collection",
+          text = 'Show All',
+          action = DT::JS("function ( e, dt, node, config ) {
+                                    dt.page.len(-1);
+                                    dt.ajax.reload();
+                                }")
+          )
+        )
+      )
     )
   }) 
   
+  output$test_log <- renderUI({
+    req(input$run_test, test_output())
+    message_items <- lapply(test_output()[[2]], function(msg) {
+      tags$p(msg)
+    })
+    do.call(tagList, message_items)
+  })
   # statistical test plot
   
   statistical_test_plot_output <- reactive({
@@ -615,10 +639,10 @@ server <- function(input, output, session) {
     if(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric")){
       # plot_msg("Try ",input$test_col,"_posthoc analysis for visualization")
       plot_msg(
-        paste0("Try <span style='color:green;'>", input$test_col, "</span>_posthoc analysis for visualization")
+        paste0("Try <span style='color:green;'>", input$test_col, "_posthoc</span> analysis")
         )
     } else {
-      statistical_test_plot(test_output(), input$variable_col, input$test_col)
+      statistical_test_plot(test_output()[[1]], input$variable_col, input$test_col)
     }
 
   })
@@ -640,19 +664,19 @@ server <- function(input, output, session) {
   
   output$filter_term_olink_ids_ui <- renderUI({
     req(test_output(), input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric"), input$use_olink_ids == TRUE)
-    selectInput("filter_term_olink_ids", "Term to filter on", choices = test_output() %>% dplyr::distinct(term) %>% dplyr::pull(term), multiple = FALSE)
+    selectInput("filter_term_olink_ids", "Term to filter on", choices = test_output()[[1]] %>% dplyr::distinct(term) %>% dplyr::pull(term), multiple = FALSE)
   })
   
   olink_ids_to_use <- reactive({
     req(test_output(), input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric"), input$use_olink_ids == TRUE)
     if(is.null(input$filter_term_olink_ids) | input$filter_term_olink_ids == ""){
-      test_output() %>% 
+      test_output()[[1]] %>% 
         dplyr::filter(Threshold == 'Significant') %>%
         dplyr::select(OlinkID) %>%
         dplyr::distinct() %>%
         dplyr::pull()
     } else {
-      test_output() %>% 
+      test_output()[[1]] %>% 
         dplyr::filter(Threshold == 'Significant' & term == input$filter_term_olink_ids) %>%
         dplyr::select(OlinkID) %>%
         dplyr::distinct(OlinkID) %>%
@@ -673,7 +697,7 @@ server <- function(input, output, session) {
 
   output$posthoc_effect_ui <- renderUI({
     req(input$test_col %in% c( "olink_anova", "olink_lmer", "olink_ordinalRegression"), full_data(), test_output()) 
-    selectInput("posthoc_effect", "Term (effect) to perform post-hoc on", choices = test_output() %>% dplyr::distinct(term) %>% dplyr::pull(term), multiple = FALSE)
+    selectInput("posthoc_effect", "Term (effect) to perform post-hoc on", choices = test_output()[[1]] %>% dplyr::distinct(term) %>% dplyr::pull(term), multiple = FALSE)
   })
   
   output$posthoc_effect_formula_ui <- renderUI({
@@ -741,20 +765,147 @@ server <- function(input, output, session) {
   output$posthoc_test_result <- DT::renderDataTable({
     req(input$run_posthoc, posthoc_output())
     datatable(
-      posthoc_output() %>% 
+      posthoc_output()[[1]] %>% 
         as.data.frame() %>%
         dplyr::mutate(across(where(is.numeric), ~ round(., 3))),
       caption = paste0(input$test_col, "_posthoc"),
-      filter = "top"
-    )
+      filter = "top", 
+      extensions = 'Buttons', 
+      options = list(
+        dom = 'Bflrtip',
+        buttons = list('copy', 'csv', 'excel', list(
+          extend = "collection",
+          text = 'Show All',
+          action = DT::JS("function ( e, dt, node, config ) {
+                                    dt.page.len(-1);
+                                    dt.ajax.reload();
+                                }")
+          )
+        )
+       )
+     )
   }) 
   
+  output$posthoc_test_log <- renderUI({
+    req(input$run_posthoc, posthoc_output())
+    message_items <- lapply(posthoc_output()[[2]], function(msg) {
+      tags$p(msg)
+    })
+    do.call(tagList, message_items)
+  })
+
   
+  output$statistical_test_boxplot_variable_ui <- renderUI({
+    req(full_data(), input$test_col, input$panel_col)
+    if (input$test_col %in% c("olink_ttest", "olink_wilcox")) {
+      selectInput("boxplot_variable_list", "Variable(s) for box plot", choices = setdiff(column_types(),not_variable_label), multiple = FALSE)
+    } else {
+      selectInput("boxplot_variable_list", "Variable(s) for box plot", choices = setdiff(names(full_data()),not_variable_label), multiple = TRUE)
+    }
+  })
+  
+  statistical_test_boxplot_olink_list <- reactive({
+    req(full_data(), input$test_col, input$panel_col)
+    
+    if(input$test_col == "olink_ttest" & !is.null(test_output())){
+      df2use <- test_output()[[1]]
+      list2pass <- df2use %>%
+        dplyr::distinct(OlinkID) %>%
+        dplyr::pull()
+    } else if (input$test_col == "olink_anova" & !is.null(test_output())){
+      df2use <- posthoc_output()[[1]]
+      list2pass <- df2use %>%
+        dplyr::distinct(OlinkID) %>%
+        dplyr::pull()
+    } else {
+      df2use <- full_data() 
+      
+      if(input$panel != "all"){
+        df2use <- df2use %>% dplyr::filter(Panel == input$panel_col)
+      }
+      
+      list2pass <- df2use %>% 
+        dplyr::distinct(OlinkID) %>%
+        dplyr::pull()
+    }
+    
+    list2pass
+  })
+    
+  output$statistical_test_boxplot_olink_ui <- renderUI({
+    req(full_data(), input$test_col, input$panel_col)
+    selectInput("boxplot_olink_list", 
+                "olinkID(s) for box plot", 
+                choices = statistical_test_boxplot_olink_list(), 
+                multiple = TRUE)
+  })
+  
+  output$statistical_test_boxplot_number_ui <- renderUI({
+    req(full_data(), input$test_col, input$panel_col)
+    numericInput("boxplot_number",
+                "number of proteins per plot", 
+                value = 4,
+                min = 1,
+                max = 12
+                )
+  })
+  
+  output$statistical_test_boxplot_run_ui <- renderUI({
+    req(full_data(), input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list)
+    actionButton("generate_boxplot", "Show boxplot")
+  })
+  
+  # Reactive values to track the plot
+  rv <- reactiveValues(plot = NULL)
+  
+  output$statistical_test_boxplot_out <- renderPlot({
+    req(full_data(), input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+
+    df2plot <- full_data()
+    
+    if(input$panel_col != "all"){
+      df2plot <- df2plot %>% dplyr::filter(Panel == input$panel_col)
+    }
+    
+    df2plot <- df2plot %>% 
+      dplyr::filter(!(grepl("control|ctrl", SampleID, ignore.case = TRUE))) %>%      
+      dplyr::filter(!(grepl("control|ctrl", Assay, ignore.case = TRUE))) %>%
+      dplyr::filter(!is.na(NPX))
+    
+    p <- OlinkAnalyze::olink_boxplot(
+      df = df2plot,
+      variable = input$boxplot_variable_list,
+      olinkid_list = input$boxplot_olink_list,
+      verbose = FALSE,
+      number_of_proteins_per_plot = input$boxplot_number
+      )
+    
+    rv$plot <- p[[1]] # Store the plot in reactive values
+    
+    p[[1]]
+    
+  })
+  
+# Download handler
+output$download_plot <- downloadHandler(
+  filename = function() {
+    paste0("boxplot_", Sys.Date(), ".", input$download_type)
+  },
+  content = function(file) {
+    ggsave(
+      filename = file,
+      plot = rv$plot, # Use the stored plot
+      device = input$download_type,
+      width = input$download_width, 
+      height = input$download_height
+    )
+  }
+)
+
 }
-
-
-
 
 shiny::shinyApp(ui = ui, server = server)
 
-
+# ,
+# posthoc_results = ifelse(input$test_col == "olink_anova" & !is.null(posthoc_output()), posthoc_output()[[1]], NULL),
+# ttest_results = ifelse(input$test_col == "olink_ttest" & !is.null(test_output()), test_output()[[1]], NULL)

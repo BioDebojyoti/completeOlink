@@ -388,41 +388,58 @@ statistical_test <- function(
     df <- df %>% dplyr::filter(Panel == panel_col)
   }
   
+  df <- df %>%
+    dplyr::filter(!(grepl("control|ctrl", SampleID, ignore.case = TRUE))) %>%
+    dplyr::filter(!(grepl("control|ctrl", Assay, ignore.case = TRUE)))
+  
   if(test_col == "olink_ttest"){
     if(is.null(pair_id_val) || pair_id_val == "null"){
-      out <- OlinkAnalyze::olink_ttest(df, variable)
+      verbose_msg <- capture.output(
+      out <- OlinkAnalyze::olink_ttest(df, variable),
+      type = "message"
+      )
     } else {
-      out <- OlinkAnalyze::olink_ttest(df, variable, pair_id = pair_id_val)
+      verbose_msg <- capture.output(
+      out <- OlinkAnalyze::olink_ttest(df, variable, pair_id = pair_id_val),
+      type = "message"
+      )
     }
   }
     
   if(test_col == "olink_wilcox"){
     if(is.null(pair_id_val) || pair_id_val == "null"){
-      out <- OlinkAnalyze::olink_wilcox(df, variable)
+      verbose_msg <- capture.output(
+      out <- OlinkAnalyze::olink_wilcox(df, variable),
+      type = "message"
+      )
     } else {
-      out <- OlinkAnalyze::olink_wilcox(df, variable, pair_id = pair_id_val)
+      verbose_msg <- capture.output(
+      out <- OlinkAnalyze::olink_wilcox(df, variable, pair_id = pair_id_val),
+      type = "message"
+      )
     }    
   }
   
   if(test_col == "olink_anova"){
     
-    
-    df <- df %>%
-      dplyr::filter(!(grepl("control|ctrl", SampleID, ignore.case = TRUE))) %>%
-      dplyr::filter(!(grepl("control|ctrl", Assay, ignore.case = TRUE)))
-    
     if(is.null(model_formula_text) | model_formula_text == ""){
+      verbose_msg <- capture.output(
       out <- OlinkAnalyze::olink_anova(
         df = df, 
         variable = variable, 
         covariates = covariate_val,
-        return.covariates = return_covariates
-      ) 
+        return.covariates = return_covariates,
+        verbose = TRUE),
+      type = "message"
+      )
     } else {
+      verbose_msg <- capture.output(
       out <- OlinkAnalyze::olink_anova(
         df = df, 
         model_formula = model_formula_text,
-        return.covariates = return_covariates
+        return.covariates = return_covariates,
+        verbose = TRUE),
+      type = "message"
       )
     }
     
@@ -430,28 +447,30 @@ statistical_test <- function(
     
   if(test_col == "olink_lmer"){
     if(is.null(model_formula_text) | model_formula_text == ""){
+      verbose_msg <- capture.output(
       out <- OlinkAnalyze::olink_lmer(
         df = df,
         variable = variable,
         random = random_effect,
         covariates = covariate_val,
-        return.covariates = return_covariates
+        return.covariates = return_covariates,
+        verbose = TRUE),
+      type = "message"
       )
     } else {
+      verbose_msg <- capture.output(
       out <- OlinkAnalyze::olink_lmer(
         df = df,
         model_formula = model_formula_text,
-        return.covariates = return_covariates
+        return.covariates = return_covariates,
+        verbose = TRUE),
+      type = "message"
       )
     }
     
   }
   
   if(test_col == "olink_ordinalRegression"){
-    
-    df <- df %>%
-      dplyr::filter(!stringr::str_detect(SampleID, stringr::regex("control|ctrl", ignore.case = TRUE))) %>%
-      dplyr::filter(!stringr::str_detect(Assay, stringr::regex("control|ctrl", ignore.case = TRUE))) 
     
     if (is.vector(variable)){
       for(v in variable){
@@ -462,34 +481,43 @@ statistical_test <- function(
       }
     }
     
+    verbose_msg <- capture.output(
     out <- OlinkAnalyze::olink_ordinalRegression(
       df,
       variable = variable,
       covariates = covariate_val,
-      return.covariates = return_covariates
+      return.covariates = return_covariates,
+      verbose = TRUE),
+    type = "message"
     )
     
   }
   
   if(test_col == "olink_one_non_parametric"){
     if(dependence_val){
+      verbose_msg <- capture.output(
       out <- OlinkAnalyze::olink_one_non_parametric(
         df,
         variable = variable,
         dependence = dependence_val,
-        subject = subject_val
+        subject = subject_val,
+        verbose = TRUE),
+      type = "message"
       )
     } else {
+      verbose_msg <- capture.output(
       out <- OlinkAnalyze::olink_one_non_parametric(
         df,
-        variable = variable
+        variable = variable,
+        verbose = TRUE),
+      type = "message"
       )
       
     }
     
   }
   
-  return(out)
+  return(list(out, verbose_msg))
   
 }
 
@@ -585,49 +613,66 @@ posthoc_statistics <- function(
     if(is.null(posthoc_model_formula) | posthoc_model_formula == ""){
       if(is.null(posthoc_effect)){
         # print("anova option: 1")
-        out <- OlinkAnalyze::olink_anova_posthoc(
+        verbose_msg <- capture.output(
+          out <- OlinkAnalyze::olink_anova_posthoc(
           df = df,
           olinkid_list = olink_list,
           variable = variable,
           covariates = covariate_val,
           effect_formula = posthoc_effect_formula,
           mean_return = as.logical(return_mean),
-          post_hoc_padjust_method = posthoc_padj_method
-        )
+          post_hoc_padjust_method = posthoc_padj_method,
+          verbose = TRUE
+        ),
+        type = "message"
+      )
       } else {
         # print("anova option: 2")
-        out <- OlinkAnalyze::olink_anova_posthoc(
+        verbose_msg <- capture.output(
+          out <- OlinkAnalyze::olink_anova_posthoc(
           df = df,
           olinkid_list = olink_list,
           variable = variable,
           covariates = covariate_val,
           effect = posthoc_effect,
           mean_return = as.logical(return_mean),
-          post_hoc_padjust_method = posthoc_padj_method
+          post_hoc_padjust_method = posthoc_padj_method,
+          verbose = TRUE
+        ),
+        type = "message"
         )
         
       }
     } else {
       if(is.null(posthoc_effect)){
         # print("anova option: 3")
+        verbose_msg <- capture.output(
         out <- OlinkAnalyze::olink_anova_posthoc(
           df = df,
           olinkid_list = olink_list,
           model_formula = posthoc_model_formula,
           effect_formula = posthoc_effect_formula,
           mean_return = as.logical(return_mean),
-          post_hoc_padjust_method = posthoc_padj_method
+          post_hoc_padjust_method = posthoc_padj_method,
+          verbose = TRUE
+        ),
+        type = "message"
         )
       } else {
         # print("anova option: 4")
-        out <- OlinkAnalyze::olink_anova_posthoc(
+        verbose_msg <- capture.output(
+          out <- OlinkAnalyze::olink_anova_posthoc(
           df = df,
           olinkid_list = olink_list,
           model_formula = posthoc_model_formula,
           effect = posthoc_effect,
           mean_return = as.logical(return_mean),
-          post_hoc_padjust_method = posthoc_padj_method
+          post_hoc_padjust_method = posthoc_padj_method,
+          verbose = TRUE
+        ),
+        type = "message"
         )
+        
       }
     }
     
@@ -638,6 +683,7 @@ posthoc_statistics <- function(
     if(is.null(posthoc_model_formula) | posthoc_model_formula == ""){
       if(is.null(posthoc_effect)){
         # print("lmer option: 1")
+        verbose_msg <- capture.output(
         out <- OlinkAnalyze::olink_lmer_posthoc(
           df = df,
           olinkid_list = olink_list,
@@ -646,10 +692,14 @@ posthoc_statistics <- function(
           random = random_list,
           effect_formula = posthoc_effect_formula,
           mean_return = as.logical(return_mean),
-          post_hoc_padjust_method = posthoc_padj_method
+          post_hoc_padjust_method = posthoc_padj_method,
+          verbose = TRUE
+        ),
+        type = "message"
         )
       } else {
         # print("lmer option: 2")
+        verbose_msg <- capture.output(
         out <- OlinkAnalyze::olink_lmer_posthoc(
           df = df,
           olinkid_list = olink_list,
@@ -658,24 +708,33 @@ posthoc_statistics <- function(
           random = random_list,
           effect = posthoc_effect,
           mean_return = as.logical(return_mean),
-          post_hoc_padjust_method = posthoc_padj_method
+          post_hoc_padjust_method = posthoc_padj_method,
+          verbose = TRUE
+        ),
+        type = "message"
         )
         
       }
     } else {
       if(is.null(posthoc_effect)){
         # print("lmer option: 3")
-        out <- OlinkAnalyze::olink_lmer_posthoc(
+        verbose_msg <- capture.output(
+          out <- OlinkAnalyze::olink_lmer_posthoc(
           df = df,
           olinkid_list = olink_list,
           model_formula = posthoc_model_formula,
           random = random_list,
           effect_formula = posthoc_effect_formula,
           mean_return = as.logical(return_mean),
-          post_hoc_padjust_method = posthoc_padj_method
+          post_hoc_padjust_method = posthoc_padj_method,
+          verbose = TRUE
+        ),
+        type = "message"
         )
+
       } else {
         # print("lmer option: 4")
+        verbose_msg <- capture.output(
         out <- OlinkAnalyze::olink_lmer_posthoc(
           df = df,
           olinkid_list = olink_list,
@@ -683,7 +742,10 @@ posthoc_statistics <- function(
           random = random_list,
           effect = posthoc_effect,
           mean_return = as.logical(return_mean),
-          post_hoc_padjust_method = posthoc_padj_method
+          post_hoc_padjust_method = posthoc_padj_method,
+          verbose = TRUE
+        ),
+        type = "message"
         )
       }
     }
@@ -694,6 +756,7 @@ posthoc_statistics <- function(
     
     if(is.null(posthoc_effect)){
       # print("ordinalRegression option: 1")
+      verbose_msg <- capture.output(
       out <- OlinkAnalyze::olink_ordinalRegression_posthoc(
         df = df,
         olinkid_list = olink_list,
@@ -701,10 +764,15 @@ posthoc_statistics <- function(
         covariates = covariate_val,
         effect_formula = posthoc_effect_formula,
         mean_return = as.logical(return_mean),
-        post_hoc_padjust_method = posthoc_padj_method
+        post_hoc_padjust_method = posthoc_padj_method,
+        verbose = TRUE
+      ),
+      type = "message"
       )
+
     } else {
       # print("ordinalRegression option: 2")
+      verbose_msg <- capture.output(
       out <- OlinkAnalyze::olink_ordinalRegression_posthoc(
         df = df,
         olinkid_list = olink_list,
@@ -712,7 +780,10 @@ posthoc_statistics <- function(
         covariates = covariate_val,
         effect = posthoc_effect,
         mean_return = as.logical(return_mean),
-        post_hoc_padjust_method = posthoc_padj_method
+        post_hoc_padjust_method = posthoc_padj_method,
+        verbose = TRUE
+      ),
+      type = "message"
       )
     }
   }
@@ -720,16 +791,22 @@ posthoc_statistics <- function(
   if(test_col == "olink_one_non_parametric"){
     
       # print("one_non_parametric option: 1")
+    verbose_msg <- capture.output(
       out <- OlinkAnalyze::olink_one_non_parametric_posthoc(
         df = df,
         olinkid_list = olink_list,
         variable = variable,
-        test = posthoc_test
+        test = posthoc_test,
+        verbose = TRUE
+      ),
+      type = "message"
       )
   }
   
-  return(out)
+  
+  return(list(out, verbose_msg))
   
 }
+
 
 
