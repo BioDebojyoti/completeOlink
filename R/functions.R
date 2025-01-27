@@ -38,6 +38,16 @@ not_variable_label <- c(
   "ExploreVersion"
 )
 
+list_of_outlier_detection_methods <- c(
+  "olink_median_iqr_outlier"
+)
+
+list_of_outlier_plots <- c(
+  "olink_pca_plot",
+  "olink_umap_plot",
+  "olink_qc_plot"
+)
+
 statistical_test_list <- c(
   "olink_ttest",
   "olink_wilcox",
@@ -155,8 +165,8 @@ pca_plot <- function(
   }
   
   data4pca <- data_to_use %>% 
-    dplyr::filter(!stringr::str_detect(SampleID, stringr::regex("control|ctrl", ignore_case = TRUE))) %>%
-    dplyr::filter(!stringr::str_detect(Assay, stringr::regex("control|ctrl", ignore_case = TRUE))) %>%
+    dplyr::filter(!grepl("control|ctrl", SampleID, ignore.case = TRUE)) %>%
+    dplyr::filter(!grepl("control|ctrl", Assay,ignore.case = TRUE)) %>%
     dplyr::select(SampleID, Assay, NPX, !!sym(group))
   
   if (group %in% c("QC_Warning")) {
@@ -368,6 +378,7 @@ npxCheck <- function(df) {
     )
   )
 }
+
 
 statistical_test <- function(
   df,
@@ -805,6 +816,102 @@ posthoc_statistics <- function(
   
   
   return(list(out, verbose_msg))
+  
+}
+
+outlier_detection_plot <- function(
+    method2use,
+    df,
+    panel = "all",
+    color = "QC_Warning",
+    x_value = 1L,
+    y_value = 2L,
+    label_samples_logical = FALSE,
+    drop_assays_logical = FALSE,
+    drop_samples_logical = FALSE,
+    byPanel_logical = FALSE,
+    outlierDefX_val = NA,
+    outlierDefY_val = NA,
+    outlierLines_logical = FALSE,
+    label_outliers_logical = TRUE,
+    IQR_outlierDef_val = 3,
+    median_outlierDef_val = 3,
+    facetNrow_val = NULL,
+    facetNcol_val = NULL
+){
+  
+  if(panel != "all"){
+    df <- df %>% dplyr::filter(Panel == panel)
+  }
+  
+  df <- df %>% 
+    dplyr::filter(!(grepl("control|ctrl", SampleID, ignore.case = TRUE))) %>%
+    dplyr::filter(!(grepl("control|ctrl", Assay, ignore.case = TRUE)))
+
+  set.seed(1234)
+  
+  if(method2use == "olink_umap_plot"){
+    plot_out <- OlinkAnalyze::olink_umap_plot(
+      df = df,
+      color_g = as.character(color),
+      x_val = as.integer(x_value),
+      y_val = as.integer(y_value),
+      label_samples = as.logical(label_samples_logical),
+      drop_assays = as.logical(drop_assays_logical),
+      drop_samples = as.logical(drop_samples_logical),
+      byPanel = as.logical(byPanel_logical),
+      outlierDefX = as.numeric(outlierDefX_val),
+      outlierDefY = as.numeric(outlierDefY_val),
+      outlierLines = as.logical(outlierLines_logical),
+      label_outliers = as.logical(label_outliers_logical),
+      quiet = FALSE
+    )
+    
+  }  
+  
+  if(method2use == "olink_pca_plot"){
+    plot_out <- OlinkAnalyze::olink_pca_plot(
+      df = df,
+      color_g = as.character(color),
+      x_val = as.integer(x_value),
+      y_val = as.integer(y_value),
+      label_samples = as.logical(label_samples_logical),
+      drop_assays = as.logical(drop_assays_logical),
+      drop_samples = as.logical(drop_samples_logical),
+      byPanel = as.logical(byPanel_logical),
+      outlierDefX = as.numeric(outlierDefX_val),
+      outlierDefY = as.numeric(outlierDefY_val),
+      outlierLines = as.logical(outlierLines_logical),
+      label_outliers = as.logical(label_outliers_logical),
+      quiet = FALSE
+    )
+    
+
+  }  
+      
+  if(method2use == "olink_qc_plot"){
+    plot_out <- OlinkAnalyze::olink_qc_plot(
+      df = df,
+      color_g = !!sym(color),
+      plot_index = FALSE,
+      label_outliers = as.logical(label_outliers_logical),
+      IQR_outlierDef = as.numeric(IQR_outlierDef_val),
+      median_outlierDef = as.numeric(median_outlierDef_val),
+      outlierLines = as.logical(outlierLines_logical),
+      facetNrow = facetNrow_val,
+      facetNcol = facetNcol_val
+    )
+  }
+  
+  if (is.list(plot_out)) {
+    plot_out <- patchwork::wrap_plots(
+      plot_out, 
+      nrow = facetNrow_val,
+      ncol = facetNcol_val) 
+  } 
+  
+  
+return(plot_out)
   
 }
 
