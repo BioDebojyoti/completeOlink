@@ -47,152 +47,99 @@ server <- function(input, output, session) {
                    "",
                    sidebar = sidebar(
                      div(
-                       style = "display: flex; align-items: center;",
-                       fileInput("file", "Upload data", accept = ".csv"),
-                       actionButton(
-                         "info_btn",
-                         label = "i",
-                         style = "padding: 2px 2px;
-                       font-size: 12px;
-                       line-height: 1;
-                       border: 1px solid #ccc;
-                       border-radius: 4px;
-                       background-color: #f9f9f9;
-                       color: #333;
-                       margin-left: 5px;
-                       cursor: pointer;"
-                       )
-                     ),
+                       style = "display: flex; align-items: center;", fileInput("file", "Upload data", accept = ".csv"),
+                       actionButton("info_btn", label = "i", 
+                       style = "padding: 2px 2px; font-size: 12px; line-height: 1; border: 1px solid #ccc; border-radius: 4px; background-color: #f9f9f9; color: #333; margin-left: 5px; cursor: pointer;")
+                       ),
                      div(
-                       style = "display: flex; align-items: center;",
-                       fileInput("meta_file", "Upload meta data", accept = ".csv"),
-                       actionButton(
-                         "info_btn_meta",
-                         label = "i",
-                         style = "padding: 2px 2px;
-                       font-size: 12px;
-                       line-height: 1;
-                       border: 1px solid #ccc;
-                       border-radius: 4px;
-                       background-color: #f9f9f9;
-                       color: #333;
-                       margin-left: 5px;
-                       cursor: pointer;"
-                       )
+                       style = "display: flex; align-items: center;", fileInput("meta_file", "Upload meta data", accept = ".csv"), 
+                       actionButton("info_btn_meta", label = "m", 
+                       style = "padding: 2px 2px; font-size: 12px; line-height: 1; border: 1px solid #ccc; border-radius: 4px; background-color: #f9f9f9; color: #333; margin-left: 5px; cursor: pointer;")
                      ),
-                     # Tooltip content for the info button
-                     shinyBS::bsPopover(
-                       id = "info_btn",
-                       title = "OLINK File Format",
-                       placement = "left",
-                       trigger = "click",
-                       options = list(container = "body")
-                     ),
+                     shinyBS::bsPopover(id = "info_btn", title = "OLINK File Format", placement = "left", trigger = "click", options = list(container = "body")),
+                     div(style = "display: flex; gap: 0px; margin-top: 10px; margin-left: 0px;", actionButton("process_data", "Process uploaded data")),
                      uiOutput("panel_col_ui"),
-                     uiOutput("group_col_ui"),
-                     uiOutput("assay_ui"),
-                     fluidRow(
-                       div(
-                         style = "display: flex; gap: 10px; margin-top: 10px; margin-left: 20px;",
-                         actionButton("process_data", "Process uploaded data")
-                       ),
-                       div(style = "display: flex; gap: 20px; margin-top: 10px; margin-left: 20px;", actionButton("go_pca", "Plot PCA"), ),
-                       div(style = "display: flex; gap: 20px; margin-top: 10px; margin-left: 20px;", actionButton("go_qq", "Plot QQ"))
-                     ),
-                     div(
-                       style = "display: flex; gap: 20px; margin-top: 10px; margin-left: 20px;",
-                       sliderInput(
-                         "pointsize_pca",
-                         "point-size PCA",
-                         min = 0,
-                         max = 12,
-                         value = 3,
-                         step = 0.5
-                       )
-                     ),
-                     div(
-                       style = "display: flex; gap: 20px; margin-top: 10px; margin-left: 20px;",
-                       sliderInput(
-                         "labelsize_pca",
-                         "label-size PCA",
-                         min = 0,
-                         max = 12,
-                         value = 3,
-                         step = 0.5
-                       )
-                     ),
-                     div(
-                       style = "display: flex; gap: 20px; margin-top: 10px; margin-left: 20px;",
-                       radioButtons(
-                         "addEllipse_pca",
-                         "enable ellipse on PCA",
-                         choices = c(TRUE, FALSE),
-                         selected = FALSE
-                       ),
-                     )
+                     uiOutput("group_col_ui")
+                     # uiOutput("assay_ui"),
+                     # fluidRow(
+                     #   div(style = "display: flex; gap: 20px; margin-top: 10px; margin-left: 20px;", uiOutput("qq_ui"))
+                     # ),
                    ),
                    tabsetPanel(
                      tabPanel("Data table: raw", DT::dataTableOutput("data_uploaded")),
                      tabPanel("Data table: meta", DT::dataTableOutput("meta_uploaded")),
-                     tabPanel(
-                       "Data table: complete",
-                       DT::dataTableOutput("full_uploaded")
-                     ),
-                     tabPanel(
-                       "Data table: panel metrics",
-                       DT::dataTableOutput("panel_metrics")
-                     ),
-                     tabPanel(
-                       "Data table: group-wise panel metrics",
-                       DT::dataTableOutput("group_panel_metrics")
-                     ),
-                     tabPanel(
-                       "PCA plot",
-                       div(style = "height: calc(100vh - 100px);", # Adjust for navbar and margins
-                           plotOutput("pca_out", height = "90%"))
-                     ),
-                     tabPanel(
-                       "Quantile-Quantile plot",
-                       div(style = "height: calc(100vh - 100px);", # Adjust for navbar and margins
-                           plotOutput("qq_out", height = "100%"))
-                     )
+                     tabPanel("Data table: complete", DT::dataTableOutput("full_uploaded")),
+                     tabPanel("Data table: panel metrics", DT::dataTableOutput("panel_metrics")),
+                     tabPanel("Data table: group-wise panel metrics", DT::dataTableOutput("group_panel_metrics"))
+                     # tabPanel("Quantile-Quantile plot", div(style = "display: margin-top: 40px; height: calc(100vh - 100px);", plotOutput("qq_out", height = "100%")))
                    )
                  )
                )),
                tabPanel("Outlier Detection", fluidPage(
-                   page_sidebar(
-                     "",
-                     sidebar = sidebar(
-                       uiOutput("plot_method_col_ui"),
-                       uiOutput("outlier_color_ui"),
-                       uiOutput("outlier_panel_ui"),
-                       uiOutput("by_panel_logical_ui"),
-                       uiOutput("outlierLines_logical_ui"),
-                       uiOutput("label_samples_logical_ui"),
-                       uiOutput("label_outliers_logical_ui"),
-                       uiOutput("drop_assays_logical_ui"),
-                       uiOutput("drop_sample_logical_ui"),
-                       uiOutput("outlier_x_val_ui"),
-                       uiOutput("outlier_y_val_ui"),
-                       uiOutput("outlierDefX_val_ui"),
-                       uiOutput("outlierDefY_val_ui"),
-                       uiOutput("IQR_outlierDef_val_ui"),
-                       uiOutput("median_outlierDef_val_ui"),
-                       uiOutput("facetNrow_val_ui"),
-                       uiOutput("facetNcol_val_ui"),
-                       uiOutput("run_plot_ui")
-                     ),
-                     tabsetPanel(
-                       tabPanel("Exploratory View", plotOutput("exploratory_output")),
-                       tabPanel("Documentation/ Help", htmlOutput("exploratory_help"))
-                     )
+                 page_sidebar(
+                   "",
+                   sidebar = sidebar(
+                     uiOutput("plot_method_col_ui"),
+                     uiOutput("outlier_color_ui"),
+                     uiOutput("outlier_panel_ui"),
+                     uiOutput("run_plot_ui"),
+                     uiOutput("run_plot_msg_ui"),
+                     uiOutput("by_panel_logical_ui"),
+                     uiOutput("outlierLines_logical_ui"),
+                     uiOutput("label_samples_logical_ui"),
+                     uiOutput("label_outliers_logical_ui"),
+                     uiOutput("drop_assays_logical_ui"),
+                     uiOutput("drop_sample_logical_ui"),
+                     uiOutput("outlier_x_val_ui"),
+                     uiOutput("outlier_y_val_ui"),
+                     uiOutput("outlierDefX_val_ui"),
+                     uiOutput("outlierDefY_val_ui"),
+                     uiOutput("IQR_outlierDef_val_ui"),
+                     uiOutput("median_outlierDef_val_ui"),
+                     uiOutput("facetNrow_val_ui"),
+                     uiOutput("facetNcol_val_ui"),
+                     # Conditional download options
+                     uiOutput("download_options_outlier_ui"),
+                     uiOutput("download_width_outlier_ui"),
+                     uiOutput("download_height_outlier_ui"),
+                     uiOutput("download_type_outlier_ui"),
+                     uiOutput("download_plot_outlier_ui")
+                   ),
+                   tabsetPanel(
+                     tabPanel("Exploratory View", plotOutput("exploratory_output")),             
+                     tabPanel("Outlier Table", DT::dataTableOutput("outlier_table_output")),
+                     tabPanel("Documentation/ Help", htmlOutput("exploratory_help"))
                    )
                  )
+               )
+               ),
+               tabPanel("Filter Data", fluidPage(
+                 page_sidebar(
+                   "",
+                   sidebar = sidebar(
+                     uiOutput("assay_ui"),
+                     fluidRow(
+                       div(style = "display: flex; gap: 20px; margin-top: 10px; margin-left: 20px;", uiOutput("qq_ui"))
+                     ),
+                     uiOutput("filter_sample_id_logical_ui"),
+                     uiOutput("filter_assay_logical_ui"),
+                     uiOutput("filter_sample_id_list_ui"),
+                     uiOutput("filter_assay_list_ui"),
+                     uiOutput("filter_data_button_ui")
+                   ),
+                   tabsetPanel(
+                     tabPanel("Quantile-Quantile plot", div(style = "display: margin-top: 40px; height: calc(100vh - 100px);", plotOutput("qq_out", height = "100%"))),
+                     tabPanel("Filtered Data", DT::dataTableOutput("filtered_data_table_output")),
+                     tabPanel("Documentation/ Help", htmlOutput("filter_help"))
+                   )
+                 )
+               )
                ),               
                tabPanel("Statistics", fluidPage(
                    page_sidebar(
                      "",
                      sidebar = sidebar(
+                       uiOutput("use_filtered_data_logical_ui"),
                        uiOutput("variable_col_ui"),
                        uiOutput("test_col_ui"),
                        uiOutput("pair_id_ui"),
@@ -276,7 +223,7 @@ server <- function(input, output, session) {
   })
   
   # info button
-  observeEvent(req( input$info_btn), {
+  observeEvent(req(input$info_btn), {
     showModal(modalDialog(
       title = "OLINK File Format",
       HTML(
@@ -302,13 +249,32 @@ server <- function(input, output, session) {
       footer = modalButton("Close")
     ))
   })
+
+  observeEvent(req(input$info_btn_meta), {
+    showModal(modalDialog(
+      title = "Meta data File Format",
+      HTML(
+        "<b>Expected columns:</b><br>
+        -SampleID (mandatory)<br>
+        -Variable1(string without special character and space)<br>
+        -Variable2(string without special character and space)<br>
+        -Variable3(string without special character and space)<br>
+        .<br>
+        .<br>
+        .<br>
+        -Variablen(string without special character and space)"
+      ),
+      easyClose = TRUE,
+      footer = modalButton("Close")
+    ))
+  })
+  
   # Reactive expression to read the uploaded file
   data <- reactive({
     req(input$file)
     OlinkAnalyze::read_NPX(input$file$datapath)
   })
-  # read.csv(input$file$datapath, sep=";")
-  
+
   
   # Generate and display data tables
   output$data_uploaded <- DT::renderDataTable({
@@ -345,15 +311,17 @@ server <- function(input, output, session) {
   
   full_data <- reactive({
     req(data(), meta_data())
-    dplyr::left_join(
-      data(), 
-      meta_data() %>%
-        dplyr::mutate_if(is.numeric,as.character), by = "SampleID")
+    dplyr::left_join(data(), meta_data(), by = "SampleID")
   })
   
   output$hasData <- reactive({
     req(full_data())
     !is.null(full_data()) && ncol(full_data()) > 0
+  })
+  
+  output$qq_ui <- renderUI({
+    req(full_data())
+    actionButton("go_qq", "Plot QQ")
   })
   
   
@@ -397,41 +365,7 @@ server <- function(input, output, session) {
     )
   }) 
   
-  pca_plot_output <- reactive({
-    req(
-      
-      full_data(),
-      input$go_pca,
-      input$panel_col,
-      input$group_col,
-      input$pointsize_pca,
-      input$labelsize_pca,
-      input$addEllipse_pca     
-    )
-    pca_plot(
-      full_data(),
-      panel = input$panel_col,
-      group = input$group_col,
-      pointsize = input$pointsize_pca,
-      labelsize = input$labelsize_pca,
-      addEllipse = input$addEllipse_pca
-    )
-  })
-  
-  output$pca_out <- renderPlot({
-    req(
-      
-      full_data(),
-      input$go_pca,
-      input$panel_col,
-      input$group_col,
-      input$pointsize_pca,
-      input$labelsize_pca,
-      input$addEllipse_pca, 
-      pca_plot_output()
-    )
-    pca_plot_output()
-  })
+
   
   # Generate UI for selecting log2FC and p-value columns
   output$panel_col_ui <- renderUI({
@@ -444,46 +378,8 @@ server <- function(input, output, session) {
     selectInput("group_col", "Select group column", choices = setdiff(colnames(full_data()),not_sample_label))
   })
   
-  assay_list <- reactive({
-    req( full_data(), input$panel_col)
-    unique(
-      full_data() %>%
-        dplyr::filter(Panel == input$panel_col &
-                        Sample_Type != "CONTROL")  %>%
-        dplyr::distinct(Assay) %>%
-        dplyr::pull(Assay)
-    )
-  })
-  
-  output$assay_ui <- renderUI({
-    req( full_data(), input$panel_col, assay_list())
-    selectInput(
-      "curr_assay",
-      "Select assay",
-      choices = assay_list(),
-      selected = NULL,
-      multiple = FALSE
-    )
-  })
-  
-  
-  output$qq_out <- renderPlot({
-    req(
-      
-      full_data(),   
-      input$go_qq,
-      input$panel_col,
-      input$curr_assay
-    )
-    qq_ploter(
-      full_data(),
-      panel = input$panel_col,
-      assay = input$curr_assay
-    )
-  })
-  
+
   # Outlier detection page
-  
   output$plot_method_col_ui <- renderUI({
     req(full_data())
     selectInput("outlier_plot_method", "Select plot", choices = list_of_outlier_plots)
@@ -492,6 +388,11 @@ server <- function(input, output, session) {
   output$run_plot_ui <- renderUI({
     req(full_data(), input$outlier_plot_method)
     actionButton("run_outlier_plot", paste0("Run ", input$outlier_plot_method))
+  })
+  
+  output$run_plot_msg_ui <- renderUI({
+    req(full_data(), input$outlier_plot_method == "olink_umap_plot")
+      hr("UMAP is a stochastic method -each run might be different")
   })
   
   
@@ -511,12 +412,12 @@ server <- function(input, output, session) {
   })
   
   output$label_samples_logical_ui <- renderUI({
-    req(full_data(), input$outlier_plot_method)
+    req(full_data(), input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot"))
     radioButtons("label_samples_logical", "Use SampleID", choices = c(FALSE, TRUE))
   })
   
   output$label_outliers_logical_ui <- renderUI({
-    req(full_data(), input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot"))
+    req(full_data(), input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot", "olink_qc_plot"))
     radioButtons("label_outliers_logical", "Label outliers", choices = c(TRUE, FALSE))
   })
   
@@ -574,17 +475,21 @@ server <- function(input, output, session) {
     req(full_data(), input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot", "olink_qc_plot"))
     numericInput("facetNcol_val", "columns for panel", value = 2L, min = 1L, max = 10L)
   })
+
+  observeEvent(input$run_outlier_plot, {})
   
+  # Reactive values to track the plot
+  rv_outlier <- reactiveValues(plot = NULL)
   
-  output$exploratory_output <- renderPlot({
-    req(
+  outlier_detection_plot_output <- reactive({
+      req(
       full_data(), 
       input$outlier_plot_method, 
       input$outlier_color,  
       input$outlier_panel, 
       input$run_outlier_plot,
       input$outlierLines_logical,
-      input$label_samples_logical
+      input$label_outliers_logical
     )
     if(input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot")){
       req(
@@ -594,8 +499,8 @@ server <- function(input, output, session) {
         input$drop_sample_logical, 
         input$by_panel_logical, 
         input$outlierDefX_val,
-        input$outlierDefY_val,
-        input$label_outliers_logical
+        input$outlierDefY_val,    
+        input$label_samples_logical
       )
     } 
     if(input$outlier_plot_method %in% c("olink_qc_plot")){
@@ -621,32 +526,240 @@ server <- function(input, output, session) {
       outlierDefX_val = if(input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot")) input$outlierDefX_val else NA,
       outlierDefY_val = if(input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot")) input$outlierDefY_val else NA,
       outlierLines_logical = input$outlierLines_logical,
-      label_outliers_logical = if(input$outlier_plot_method %in% c("olink_qc_plot")) input$label_outliers_logical else TRUE,
+      label_outliers_logical = input$label_outliers_logical,
       IQR_outlierDef_val = if(input$outlier_plot_method %in% c("olink_qc_plot")) input$IQR_outlierDef_val else 3,
       median_outlierDef_val = if(input$outlier_plot_method %in% c("olink_qc_plot")) input$median_outlierDef_val else 3,
       facetNrow_val = input$facetNrow_val,
       facetNcol_val = input$facetNcol_val
     )
+    })
+    
+    output$exploratory_output <- renderPlot({
+    req(outlier_detection_plot_output())
+    rv_outlier$plot <- outlier_detection_plot_output() # Store the plot in reactive values
+    
+    outlier_detection_plot_output()[[1]]
   })
   
+  outlier_table <- reactive({
+    req(outlier_detection_plot_output())
+    outlier_detection_plot_output()[[2]]
+  })
+  
+  output$outlier_table_output <- DT::renderDataTable({
+    req(outlier_table())
+    datatable(
+      outlier_table() %>% 
+          as.data.frame() %>%
+          dplyr::mutate(across(where(is.numeric), ~ round(., 3))),
+        caption = gsub("_"," ",input$test_col),
+        filter = "top", 
+        extensions = 'Buttons', 
+        options = list(
+          dom = 'Bflrtip',
+          buttons = list('copy', 'csv', 'excel', list(
+            extend = "collection",
+            text = 'Show All',
+            action = DT::JS("function ( e, dt, node, config ) {
+                                    dt.page.len(-1);
+                                    dt.ajax.reload();
+                                }")
+          )
+          )
+        )
+      )
+    }) 
+  
+  # outlier detection plot download options
+  assay_list <- reactive({
+    req( full_data(), input$panel_col)
+    df_raw <- full_data()
+    if(input$panel_col != "all"){
+      df_raw <- df_raw %>% dplyr::filter(Panel == input$panel_col)
+    }
+    unique(
+      df_raw %>%
+        dplyr::filter((!(grepl("control|ctrl", SampleID, ignore.case=TRUE)))  & (!(grepl("control|ctrl", Assay, ignore.case=TRUE))))   %>%
+        dplyr::distinct(Assay) %>%
+        dplyr::pull(Assay)
+    )
+  })
+  
+  output$assay_ui <- renderUI({
+    req(full_data(), input$panel_col, assay_list())
+    selectInput("curr_assay","Select assay",choices = assay_list(), selected = NULL,multiple = FALSE)
+  })
+  
+  
+  output$qq_out <- renderPlot({
+    req(full_data(), input$go_qq, input$panel_col,input$curr_assay)
+    qq_ploter(
+      full_data(),
+      panel = input$panel_col,
+      assay = input$curr_assay
+    )
+  })
+  
+  output$download_options_outlier_ui <- renderUI({
+    req(full_data(), input$outlier_plot_method, input$outlier_color, input$outlier_panel, input$run_outlier_plot, input$outlierLines_logical, input$label_samples_logical)
+    h4("Download Options")
+  })
+  
+  output$download_width_outlier_ui <- renderUI({
+    req(full_data(), input$outlier_plot_method, input$outlier_color, input$outlier_panel, input$run_outlier_plot, input$outlierLines_logical, input$label_samples_logical)
+    numericInput("download_width_outlier", "Width (inches)", value = 8, min = 1)
+  })
+  
+  output$download_height_outlier_ui <- renderUI({
+    req(full_data(), input$outlier_plot_method, input$outlier_color, input$outlier_panel, input$run_outlier_plot, input$outlierLines_logical, input$label_samples_logical)
+    numericInput("download_height_outlier", "Height (inches)", value = 6, min = 1)
+  })
+  
+  output$download_type_outlier_ui <- renderUI({
+    req(full_data(), input$outlier_plot_method, input$outlier_color, input$outlier_panel, input$run_outlier_plot, input$outlierLines_logical, input$label_samples_logical)
+    selectInput("download_type_outlier", "File Type", choices = c("pdf", "png", "jpg"))
+  })
+  
+  output$download_plot_outlier_ui <- renderUI({
+    req(full_data(), input$outlier_plot_method, input$outlier_color, input$outlier_panel, input$run_outlier_plot, input$outlierLines_logical, input$label_samples_logical)
+    downloadButton("download_plot_outlier", "Download Plot")
+  })
+  
+  # Download handler
+  output$download_plot_outlier <- downloadHandler(
+    filename = function() {
+      paste0(input$outlier_plot_method,"_", Sys.Date(), ".", input$download_type_outlier)
+    },
+    content = function(file) {
+      ggsave(
+        filename = file,
+        plot = rv_outlier$plot, # Use the stored plot
+        device = input$download_type_outlier,
+        width = input$download_width_outlier, 
+        height = input$download_height_outlier
+      )
+    }
+  )
+  
+  output$exploratory_help <- renderText({
+    req(input$outlier_plot_method, full_data())
+    temp = Rd2HTML(Rd_fun(input$outlier_plot_method),
+                   out = tempfile("docs"))
+    content = read_file(temp)
+    file.remove(temp)
+    content
+  })
+    
+  # Filter Data Page
+  output$filter_assay_logical_ui <- renderUI({
+    req(full_data())
+    radioButtons("filter_assay_logical", "Filter Assay(s)", choices = c(FALSE, TRUE))
+  })
+  
+  output$filter_assay_list_ui <- renderUI({
+    req(full_data(), input$filter_assay_logical == TRUE)
+    selectInput("filter_assay_list", "Select assay(s)", choices = assay_list(), multiple = TRUE)
+  })
+
+  output$filter_sample_id_logical_ui <- renderUI({
+    req(full_data(), outlier_table())
+    radioButtons("filter_sample_id_logical", "Filter SampleID(s)", choices = c(FALSE, TRUE))
+  })
+  
+  output$filter_sample_id_list_ui <- renderUI({
+    req(full_data(), outlier_table(), input$filter_sample_id_logical == TRUE)
+    selectInput("filter_sample_id_list", "Select SampleID(s)", choices = outlier_table() %>% dplyr::pull(SampleID), multiple = TRUE)
+  })
+  
+  output$filter_data_button_ui <- renderUI({
+    req(full_data())
+
+    if (!is.null(input$filter_sample_id_logical) && input$filter_sample_id_logical == TRUE) {
+        req(!is.null(input$filter_sample_id_list)) 
+    }
+    
+    if (!is.null(input$filter_assay_logical) && input$filter_assay_logical == TRUE) {
+      req(!is.null(input$filter_assay_list))  
+    }
+    if((!is.null(input$filter_assay_list)) ||(!is.null(input$filter_sample_id_list))){
+      actionButton("filter_data_button", "Filter data")
+    }
+    
+  })
+
   # statistical page
   # Generate UI for selecting variable for statistical test
+  filtered_data <- reactive({
+    req(full_data(), input$filter_data_button)
+    
+    if (!is.null(input$filter_sample_id_logical) && input$filter_sample_id_logical) {
+      req(!is.null(input$filter_sample_id_list)) 
+    }
+    
+    if (!is.null(input$filter_assay_logical) && input$filter_assay_logical) {
+      req(!is.null(input$filter_assay_list))  
+    }
+    
+    clean_data <- full_data()
+    
+    if(!is.null(input$filter_sample_id_logical) && input$filter_sample_id_logical && !is.null(input$filter_sample_id_list)){
+      clean_data <- clean_data %>% dplyr::filter(!(SampleID %in% input$filter_sample_id_list))
+    }
+    if(!is.null(input$filter_assay_logical) && input$filter_assay_logical && !is.null(input$filter_assay_list)){
+      clean_data <- clean_data %>% dplyr::filter(!(Assay %in% input$filter_assay_list))
+    }
+    clean_data
+  })
+  
+  output$filtered_data_table_output <- DT::renderDataTable({
+    req(filtered_data())
+    datatable(filtered_data() %>% as.data.frame(),
+      caption = "clead data",
+      filter = "top", 
+      extensions = 'Buttons', 
+      options = list(
+        dom = 'Bflrtip',
+        buttons = list('copy', 'csv', 'excel', list(
+          extend = "collection",
+          text = 'Show All',
+          action = DT::JS("function ( e, dt, node, config ) {
+                                    dt.page.len(-1);
+                                    dt.ajax.reload();
+                                }")
+        )
+        )
+      )
+    )
+  })
+  
+  output$use_filtered_data_logical_ui <- renderUI({
+    req(full_data())
+    radioButtons("use_filtered_data_logical", "Use filtered data", choices = c(FALSE, TRUE))
+  })
+  
   output$test_col_ui <- renderUI({
-    req( full_data())
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+    } else {
+      req(full_data())      
+    }
     selectInput("test_col", "Select test", selected = NULL, choices = statistical_test_list)
   })   
   
   
   column_types <- reactive({
-    req(full_data(), input$panel_col)
+    req(input$panel_col)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data() 
+    } else {
+      req(full_data())  
+      df <- full_data() 
+    }
     
-    df <- full_data() %>%
-      dplyr::filter(
-        !stringr::str_detect(SampleID, stringr::regex("control|ctrl", ignore_case = TRUE))
-      ) %>%
-      dplyr::filter(
-        !stringr::str_detect(Assay, stringr::regex("control|ctrl", ignore_case = TRUE))
-      )
+    df <- df %>%
+      dplyr::filter(!grepl("control|ctrl", SampleID, ignore.case = TRUE)) %>%
+      dplyr::filter(!grepl("control|ctrl", Assay, ignore.case = TRUE))
     
     if(input$panel_col != "all"){
       df <- df %>%
@@ -664,45 +777,70 @@ server <- function(input, output, session) {
   })
   
   output$variable_col_ui <- renderUI({
-    req(full_data(), input$test_col)
+    req(input$test_col)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data() 
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
+    
     if (input$test_col %in% c("olink_ttest", "olink_wilcox")) {
       selectInput("variable_col", "Select variable", choices = setdiff(column_types(),not_variable_label), multiple = FALSE)
     } else {
-      selectInput("variable_col", "Select variable", choices = setdiff(names(full_data()),not_variable_label), multiple = TRUE)
+      selectInput("variable_col", "Select variable", choices = setdiff(names(df),not_variable_label), multiple = TRUE)
     }
   })  
   
   output$pair_id_ui <- renderUI({
-    req(input$test_col %in% c("olink_ttest", "olink_wilcox"), full_data()) # Ensure full_data() is available
-    radioButtons( 
-      "pair_id", 
-      "Pair-id", 
-      selected = FALSE,
-      choices =  c(TRUE, FALSE))
+    req(input$test_col %in% c("olink_ttest", "olink_wilcox")) 
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+    } else {
+      req(full_data())
+    }
+    radioButtons("pair_id", "Pair-id", selected = FALSE, choices =  c(TRUE, FALSE))
   })
   
   output$pair_id_col_ui <- renderUI({
-    req(input$test_col %in% c("olink_ttest","olink_wilcox"), input$pair_id == TRUE, full_data()) # Ensure full_data() is available
-    selectInput(
-      "pair_id_col", 
-      "Select pair-id column", 
-      choices = setdiff(colnames(full_data()), not_variable_label)
-    )
+    req(input$test_col %in% c("olink_ttest","olink_wilcox"), input$pair_id == TRUE) 
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
+    selectInput("pair_id_col", "Select pair-id column", choices = setdiff(colnames(df), not_variable_label))
   })
-  # choices = c("null", setdiff(colnames(full_data()), not_variable_label))
-  
+
   output$covariate_col_ui <- renderUI({
-    req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), full_data()) # Ensure full_data() is available
+    req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression")) 
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
+    
     selectInput(
       "covariate_col", 
       "Select covarite column", 
-      choices = setdiff(colnames(full_data()), not_variable_label), 
+      choices = setdiff(colnames(df), not_variable_label), 
       multiple = TRUE
     )
   })
   
   output$model_formula_ui <- renderUI({
-    req(input$test_col %in% c("olink_anova", "olink_lmer"), full_data()) # Ensure full_data() is available
+    req(input$test_col %in% c("olink_anova", "olink_lmer"))
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+    } else {
+      req(full_data())
+    }
+    
     textInput(
       "model_formula_text", 
       "Provide model formula", 
@@ -710,46 +848,81 @@ server <- function(input, output, session) {
   })
   
   output$return_covariate_ui <- renderUI({
-    req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), full_data()) # Ensure full_data() is available
-    radioButtons( 
-      "return_covariates", 
-      "Return covariates", 
-      selected = FALSE,
-      choices =  c(TRUE, FALSE))
+    req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression")) 
+    
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+    } else {
+      req(full_data())
+    }
+    
+    radioButtons("return_covariates", "Return covariates", choices = c(FALSE, TRUE))
   })
   
   output$dependence_ui <- renderUI({
-    req(input$test_col %in% c("olink_one_non_parametric"), full_data()) # Ensure full_data() is available
-    radioButtons( 
-      "dependence_text", 
-      "dependence", 
-      selected = FALSE,
-      choices =  c(TRUE, FALSE))
+    req(input$test_col %in% c("olink_one_non_parametric")) 
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+    } else {
+      req(full_data())
+    }
+    
+    radioButtons("dependence_text", "dependence", choices = c(FALSE, TRUE))
   })
   
   output$subject_ui <- renderUI({
-    req(input$test_col %in% c("olink_one_non_parametric"), input$dependence_text == TRUE, full_data()) # Ensure full_data() is available
-    selectInput("subject_text", "Select subject", choices = setdiff(names(full_data()), not_variable_label), multiple = TRUE)
+    req(input$test_col %in% c("olink_one_non_parametric"), input$dependence_text == TRUE)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
+    selectInput("subject_text", "Select subject", choices = setdiff(names(df), not_variable_label), multiple = TRUE)
   })
   
   output$random_effects_ui <- renderUI({
-    req(input$test_col %in% c("olink_lmer"), full_data()) # Ensure full_data() is available
-    selectInput("random_effect", "Select random effects", choices = setdiff(names(full_data()), not_variable_label), multiple = TRUE)
+    req(input$test_col %in% c("olink_lmer")) 
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
+    selectInput("random_effect", "Select random effects", choices = setdiff(names(df), not_variable_label), multiple = TRUE)
   })
   
   output$run_button_ui <- renderUI({
-    if(!is.null(full_data()) &&  !is.null(input$test_col)){
-      actionButton("run_test",paste0("Run ", gsub("_"," ",input$test_col)))
-    } 
+    req(input$test_col)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      if(!is.null(filtered_data()) &&  !is.null(input$test_col)){
+        actionButton("run_test",paste0("Run ", gsub("_"," ",input$test_col)))
+      } 
+    } else {
+      req(full_data())
+      if(!is.null(full_data()) &&  !is.null(input$test_col)){
+        actionButton("run_test",paste0("Run ", gsub("_"," ",input$test_col)))
+      } 
+    }
+
   })
   
   test_output <- reactive({
     req(
       input$run_test,
-      full_data(),
       input$panel_col,
       input$test_col
     )
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
     
     # Conditional requirements based on test_col
     if (input$test_col %in% c("olink_ttest", "olink_wilcox")) {
@@ -763,7 +936,7 @@ server <- function(input, output, session) {
     }
     
     statistical_test(
-      df = full_data(),
+      df = df,
       panel_col = input$panel_col,
       test_col = input$test_col,
       variable = input$variable_col,
@@ -832,9 +1005,16 @@ server <- function(input, output, session) {
     statistical_test_plot_output()
   })   
   
+  output$test_help <- renderText({
+    req(input$test_col)
+    temp = Rd2HTML(Rd_fun(input$test_col),out = tempfile("docs"))
+    content = read_file(temp)
+    file.remove(temp)
+    content
+  })
   
   output$use_olink_ids_ui <- renderUI({
-    req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric"), test_output()) # Ensure full_data() is available
+    req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric"), test_output()) 
     radioButtons( 
       "use_olink_ids", 
       "Use specific OlinkIDs", 
@@ -870,31 +1050,52 @@ server <- function(input, output, session) {
   })
   
   output$run_posthoc_ui <- renderUI({
-    if(!is.null(full_data()) &&  !is.null(input$test_col) && input$test_col %in% c("olink_anova", "olink_one_non_parametric", "olink_ordinalRegression", "olink_lmer") && !is.null(test_output())){
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
+    if(!is.null(df) &&  !is.null(input$test_col) && input$test_col %in% c("olink_anova", "olink_one_non_parametric", "olink_ordinalRegression", "olink_lmer") && !is.null(test_output())){
       actionButton("run_posthoc", paste0("Run ",input$test_col,"_posthoc"))
     } 
   })
   
   output$posthoc_effect_ui <- renderUI({
-    req(input$test_col %in% c( "olink_anova", "olink_lmer", "olink_ordinalRegression"), full_data(), test_output()) 
+    req(input$test_col %in% c( "olink_anova", "olink_lmer", "olink_ordinalRegression"), test_output()) 
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
     selectInput("posthoc_effect", "Term (effect) to perform post-hoc on", choices = test_output()[[1]] %>% dplyr::distinct(term) %>% dplyr::pull(term), multiple = FALSE)
   })
   
   output$posthoc_effect_formula_ui <- renderUI({
-    req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), full_data(), test_output()) # Ensure full_data() is available
-    textInput(
-      "posthoc_effect_formula_text", 
-      "Effect formula for post-hoc", 
-      value = NULL)
+    req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), test_output())
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
+    textInput("posthoc_effect_formula_text", "Effect formula for post-hoc", value = NULL)
   })
   
   output$posthoc_mean_return_ui <- renderUI({
-    req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), full_data(), test_output()) # Ensure full_data() is available
-    radioButtons( 
-      "posthoc_mean_return", 
-      "Return mean of each factor level", 
-      selected = FALSE,
-      choices =  c(TRUE, FALSE))
+    req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), test_output()) 
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
+    radioButtons("posthoc_mean_return", "Return mean of each factor level", choices = c(FALSE, TRUE))
   })
   
   output$posthoc_padjt_method_ui <- renderUI({
@@ -909,7 +1110,6 @@ server <- function(input, output, session) {
   
   posthoc_output <- reactive({
     req(
-      full_data(),
       input$run_test,
       input$run_posthoc,
       test_output(),
@@ -917,6 +1117,13 @@ server <- function(input, output, session) {
       input$test_col,
       input$posthoc_olinkid_list
     )
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
     if (input$test_col %in% c("olink_anova", "olink_lmer")){
       req(!is.null(input$variable_col) | !is.null(input$model_formula_text) | input$model_formula_text != "", input$return_covariates, !is.null(input$posthoc_effect) | !is.null(input$posthoc_effect_formula_text))
     } else if (input$test_col %in% c("olink_ordinalRegression")){
@@ -926,7 +1133,7 @@ server <- function(input, output, session) {
     }
     
     posthoc_statistics(
-      df = full_data(),
+      df = df,
       posthoc_effect = if (input$test_col %in% c("olink_lmer","olink_anova", "olink_ordinalRegression")) input$posthoc_effect else NULL,
       posthoc_effect_formula = if (input$test_col %in% c("olink_lmer","olink_anova", "olink_ordinalRegression")) input$posthoc_effect_formula_text else NULL,
       panel_col = input$panel_col,
@@ -976,16 +1183,30 @@ server <- function(input, output, session) {
   
   
   output$statistical_test_boxplot_variable_ui <- renderUI({
-    req(full_data(), input$test_col, input$panel_col)
+    req(input$test_col, input$panel_col)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
     if (input$test_col %in% c("olink_ttest", "olink_wilcox")) {
       selectInput("boxplot_variable_list", "Variable(s) for box plot", choices = setdiff(column_types(),not_variable_label), multiple = FALSE)
     } else {
-      selectInput("boxplot_variable_list", "Variable(s) for box plot", choices = setdiff(names(full_data()),not_variable_label), multiple = TRUE)
+      selectInput("boxplot_variable_list", "Variable(s) for box plot", choices = setdiff(names(df),not_variable_label), multiple = TRUE)
     }
   })
   
   statistical_test_boxplot_olink_list <- reactive({
-    req(full_data(), input$test_col, input$panel_col)
+    req(input$test_col, input$panel_col)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
     
     if(input$test_col == "olink_ttest" & !is.null(test_output())){
       df2use <- test_output()[[1]]
@@ -998,7 +1219,7 @@ server <- function(input, output, session) {
         dplyr::distinct(OlinkID) %>%
         dplyr::pull()
     } else {
-      df2use <- full_data() 
+      df2use <- df
       
       if(input$panel != "all"){
         df2use <- df2use %>% dplyr::filter(Panel == input$panel_col)
@@ -1013,38 +1234,54 @@ server <- function(input, output, session) {
   })
   
   output$statistical_test_boxplot_olink_ui <- renderUI({
-    req(full_data(), input$test_col, input$panel_col)
-    selectInput("boxplot_olink_list", 
-                "olinkID(s) for box plot", 
-                choices = statistical_test_boxplot_olink_list(), 
-                multiple = TRUE)
+    req(input$test_col, input$panel_col)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
+    selectInput("boxplot_olink_list", "olinkID(s) for box plot", choices = statistical_test_boxplot_olink_list(), multiple = TRUE)
   })
   
   output$statistical_test_boxplot_number_ui <- renderUI({
-    req(full_data(), input$test_col, input$panel_col)
-    numericInput("boxplot_number",
-                 "number of proteins per plot", 
-                 value = 4,
-                 min = 1,
-                 max = 12
-    )
+    req(input$test_col, input$panel_col)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
+    numericInput("boxplot_number", "number of proteins per plot", value = 4, min = 1, max = 12)
   })
   
   output$statistical_test_boxplot_run_ui <- renderUI({
-    req(full_data(), input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list)
+    req(input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+    } else {
+      req(full_data())
+    }
     actionButton("generate_boxplot", "Show boxplot")
   })
   
-  observeEvent(input$generate_boxplot, {
-  })
+  observeEvent(input$generate_boxplot, {})
   
   # Reactive values to track the plot
   rv <- reactiveValues(plot = NULL)
   
   output$statistical_test_boxplot_out <- renderPlot({
-    req(full_data(), input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+    req(input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df2plot <- filtered_data()
+    } else {
+      req(full_data())
+      df2plot <- full_data()
+    }
     
-    df2plot <- full_data()
     
     if(input$panel_col != "all"){
       df2plot <- df2plot %>% dplyr::filter(Panel == input$panel_col)
@@ -1070,27 +1307,52 @@ server <- function(input, output, session) {
   })
   
   output$download_options_ui <- renderUI({
-    req(full_data(), input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+    req(input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+    } else {
+      req(full_data())
+    }
     h4("Download Options")
   })
   
   output$download_width_ui <- renderUI({
-    req(full_data(), input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+    req(input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+    } else {
+      req(full_data())
+    }
     numericInput("download_width", "Width (inches)", value = 8, min = 1)
   })
   
   output$download_height_ui <- renderUI({
-    req(full_data(), input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+    req(input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+    } else {
+      req(full_data())
+    }
     numericInput("download_height", "Height (inches)", value = 6, min = 1)
   })
   
   output$download_type_ui <- renderUI({
-    req(full_data(), input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+    req(input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+    } else {
+      req(full_data())
+    }
     selectInput("download_type", "File Type", choices = c("pdf", "png", "jpg"))
   })
   
   output$download_plot_ui <- renderUI({
-    req(full_data(), input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+    req(input$test_col, input$panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+    } else {
+      req(full_data())
+    }
     downloadButton("download_plot", "Download Plot")
   })
   
@@ -1111,14 +1373,6 @@ server <- function(input, output, session) {
   )
   
   
-  output$test_help <- renderText({
-    req(input$test_col)
-    temp = Rd2HTML(Rd_fun(input$test_col),out = tempfile("docs"))
-    content = read_file(temp)
-    file.remove(temp)
-    content
-  })
-  
   output$posthoc_test_help <- renderText({
     req(input$test_col, test_output())
     temp = Rd2HTML(Rd_fun(paste0(input$test_col,"_posthoc", collapse = "")),
@@ -1128,14 +1382,7 @@ server <- function(input, output, session) {
     content
   })
   
-  output$exploratory_help <- renderText({
-    req(input$outlier_plot_method, full_data())
-    temp = Rd2HTML(Rd_fun(input$outlier_plot_method),
-                   out = tempfile("docs"))
-    content = read_file(temp)
-    file.remove(temp)
-    content
-  })
+
   
 }
 

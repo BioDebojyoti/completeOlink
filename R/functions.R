@@ -239,8 +239,8 @@ qq_ploter <- function(data_to_use, panel, assay){
   }
   
   assay_data <- data_to_use %>%
-    dplyr::filter(!stringr::str_detect(SampleID, stringr::regex("control|ctrl", ignore_case = TRUE))) %>%
-    dplyr::filter(!stringr::str_detect(Assay, stringr::regex("control|ctrl", ignore_case = TRUE))) %>%
+    dplyr::filter(!grepl("control|ctrl", SampleID, ignore.case = TRUE)) %>%
+    dplyr::filter(!grepl("control|ctrl", Assay, ignore.case = TRUE)) %>%
     dplyr::filter(Assay == assay) %>%
     dplyr::select(NPX) 
   
@@ -253,11 +253,18 @@ qq_ploter <- function(data_to_use, panel, assay){
         y = "observed",
         title = paste0("q-q plot: ", assay)
       ) +
-      theme(
-        plot.title = element_text(size = 24),
-        axis.title = element_text(size = 18),
-        axis.text.x = element_text(color = "#000000", size = 18),
-        axis.text.y = element_text(color = "#000000", size = 18)
+      ggplot2::theme_minimal(base_size = 15) +
+      ggplot2::theme(
+        plot.title = element_text(
+          size = 24,             # Title font size
+          face = "bold",         # Bold title
+          hjust = 0.5,           # Center align title
+          margin = margin(b = 20) # Add space below title
+        ),
+        axis.title = element_text(size = 16),
+        axis.text.x = element_text(color = "#000000", size = 14),
+        axis.text.y = element_text(color = "#000000", size = 14),
+        plot.margin = margin(t = 20, r = 20, b = 20, l = 20) # Add space around plot
       )
   )
 }
@@ -864,7 +871,7 @@ outlier_detection_plot <- function(
       outlierDefY = as.numeric(outlierDefY_val),
       outlierLines = as.logical(outlierLines_logical),
       label_outliers = as.logical(label_outliers_logical),
-      quiet = FALSE
+      quiet =TRUE
     )
     
   }  
@@ -883,7 +890,7 @@ outlier_detection_plot <- function(
       outlierDefY = as.numeric(outlierDefY_val),
       outlierLines = as.logical(outlierLines_logical),
       label_outliers = as.logical(label_outliers_logical),
-      quiet = FALSE
+      quiet = TRUE
     )
     
 
@@ -903,15 +910,36 @@ outlier_detection_plot <- function(
     )
   }
   
-  if (is.list(plot_out)) {
-    plot_out <- patchwork::wrap_plots(
-      plot_out, 
-      nrow = facetNrow_val,
-      ncol = facetNcol_val) 
-  } 
+  if(method2use %in% c("olink_pca_plot", "olink_umap_plot")){
+    if (is.list(plot_out)) {
+      for(p in seq(1,length(plot_out))){
+        if(p==1){
+          p_out_table <- plot_out[[p]]$data %>% dplyr::filter(Outlier==1)
+        } else {
+          if(nrow(p_out_table) == 0){
+            p_out_table <- plot_out[[p]]$data %>% dplyr::filter(Outlier==1)
+          } else {
+            p_out_table <- rbind(p_out_table,plot_out[[p]]$data %>% dplyr::filter(Outlier==1))
+          }
+        }
+      }
+      
+  }
+    
+  plot_out <- patchwork::wrap_plots(plot_out, nrow = facetNrow_val, ncol = facetNcol_val)
+  
+  } else {
+    
+    p_out_table <- plot_out$data %>% dplyr::filter(Outlier==1)
+  }
+  
+  if((panel != "all") & (!("Panel" %in% names(p_out_table)))){
+    p_out_table["Panel"] <- panel
+  }
   
   
-return(plot_out)
+  
+return(list(plot_out, p_out_table))
   
 }
 
