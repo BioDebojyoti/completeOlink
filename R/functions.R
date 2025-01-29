@@ -78,7 +78,22 @@ pval_correction_methods <- c(
 post_hoc_padjust_method_list1 <- c("tukey", "sidak", "bonferroni", "none")
 post_hoc_padjust_method_list2 <- c("kruskal", "friedman")
 
-plot_msg <- function(msg) {
+plot_ggplot_msg <- function(msg) {
+  return(
+    ggplot() +
+      geom_richtext(
+        aes(x = 0.5, y = 0.5, label = msg),
+        size = 6, # Adjust size if needed
+        hjust = 0.5,
+        vjust = 0.5,
+        fill = NA, # No background fill
+        label.color = NA # No border
+      ) +
+      theme_void()
+  )
+}
+
+plot_plotly_msg <- function(msg) {
   plotly::plot_ly() %>%
     plotly::layout(
       annotations = list(

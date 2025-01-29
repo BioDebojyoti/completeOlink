@@ -20,6 +20,7 @@ list_of_packages1 <- c(
   "tools",
   "FSA",
   "gbRd",
+  "msigdbr",
   "patchwork"
 )
 
@@ -151,9 +152,8 @@ server <- function(input, output, session) {
                      "",
                      sidebar = sidebar(
                        div(style = "overflow-y: auto; max-height: 90vh;", 
-                           bsCollapse(id = "sidebar_collapse", open = c("General Settings"), multiple = TRUE,
-                                      # General Settings Section
-                                      bsCollapsePanel("General Settings", style = "primary",
+                           bsCollapse(id = "sidebar_collapse_tab4", open = c("Method"), multiple = TRUE,
+                                      bsCollapsePanel("Method", style = "primary",
                                                       uiOutput("use_filtered_data_logical_ui"),
                                                       uiOutput("stats_panel_col_ui"),
                                                       uiOutput("variable_col_ui"),
@@ -180,20 +180,27 @@ server <- function(input, output, session) {
                                       bsCollapsePanel("Run", style = "success",
                                                       uiOutput("run_button_ui"),
                                                       hr(),
+                                                      uiOutput("volcano_alternate_x_label_ui"),
+                                                      uiOutput("volcano_olink_specific_logical_ui"),
+                                                      uiOutput("volcano_olink_specific_list_ui"),
                                                       uiOutput("plot_button_lmer_ui"),
                                                       uiOutput("plot_olinkid_list_ui"),
                                                       uiOutput("plot_x_axis_variable_ui"),
                                                       uiOutput("plot_col_variable_ui"),
                                                       uiOutput("plot_number_of_proteins_per_plot_ui")
                                       ),
-                                      
                                       # Download Options
                                       bsCollapsePanel("Download Options", style = "danger",
                                                       uiOutput("download_lmer_options_ui"),
                                                       uiOutput("download_lmer_width_ui"),
                                                       uiOutput("download_lmer_height_ui"),
                                                       uiOutput("download_lmer_type_ui"),
-                                                      uiOutput("download_lmer_plot_ui")
+                                                      uiOutput("download_lmer_plot_ui"),
+                                                      uiOutput("download_statistical_test_plot_options_ui"),
+                                                      uiOutput("download_statistical_test_plot_width_ui"),
+                                                      uiOutput("download_statistical_test_plot_height_ui"),
+                                                      uiOutput("download_statistical_test_plot_type_ui"),
+                                                      uiOutput("download_statistical_test_plot_plot_ui")
                                       )
                            )
                        )
@@ -203,7 +210,8 @@ server <- function(input, output, session) {
                        tabPanel("Statistical test plot", 
                                 div(
                                   style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;",
-                                  plotlyOutput("statistical_test_plot_out", height = "800px", width = "800px")
+                                  plotOutput("statistical_test_plot_out", height = "800px", width = "800px")
+                                  # plotlyOutput("statistical_test_plot_out", height = "800px", width = "800px")
                                 ),
                        ),
                        tabPanel("Statistical test log", uiOutput("test_log")),
@@ -1066,24 +1074,107 @@ server <- function(input, output, session) {
   })
   # statistical test plot
   
-  statistical_test_plot_output <- reactive({
+  output$volcano_alternate_x_label_ui <- renderUI({
     req(
       test_output(), 
       input$variable_col, 
       input$test_col 
     )
-    if(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric")){
-      plot_msg(paste0("Try <span style='color:green;'>", paste0(input$test_col, "_posthoc", collapse = ""),"</span> analysis"))
-    } else {
-      statistical_test_plot(test_output()[[1]], input$variable_col, input$test_col)
-    }
-    
+    textInput("volcano_alternate_x_label", "Alternate x-axis label", value = "")
   })
   
-  output$statistical_test_plot_out <- renderPlotly({
-    req(statistical_test_plot_output())
-    statistical_test_plot_output()
+  output$volcano_olink_specific_logical_ui <- renderUI({
+    req(
+      test_output(), 
+      input$variable_col, 
+      input$test_col 
+    )
+    radioButtons("volcano_olink_specific_logical", "Use specific OlinkID(s)", choices = c(FALSE,TRUE))
+  })
+  
+  output$volcano_olink_specific_list_ui <- renderUI({
+    req(test_output(), input$variable_col, input$test_col, as.logical(input$volcano_olink_specific_logical) == TRUE)
+    olinks_available <- test_output()[[1]] %>% dplyr::distinct(OlinkID) %>% dplyr::pull(OlinkID)
+    selectInput("volcano_olink_specific_list", "Use specific OlinkID(s)", choices = olinks_available, multiple = TRUE)
+  })
+  
+  statistical_test_plot_output <- reactive({
+    req(
+      test_output(), 
+      input$variable_col, 
+      input$test_col, 
+      input$volcano_olink_specific_logical
+    )
+    if(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric")){
+      # plot_plotly_msg(paste0("Try <span style='color:green;'>", paste0(input$test_col, "_posthoc", collapse = ""),"</span> analysis"))
+      plot_to_return <- plot_ggplot_msg(paste0("Try <span style='color:green;'>", paste0(input$test_col, "_posthoc", collapse = ""),"</span> analysis"))
+    } else {
+      x_label <- ifelse(input$volcano_alternate_x_label == "", "Estimate", input$volcano_alternate_x_label)
+      if(as.logical(input$volcano_olink_specific_logical)){
+        req(input$volcano_olink_specific_list)
+        plot_to_return <- OlinkAnalyze::olink_volcano_plot(test_output()[[1]], olinkid_list = input$volcano_olink_specific_list, x_lab = x_label)
+        
+      } else {
+        plot_to_return <- OlinkAnalyze::olink_volcano_plot(test_output()[[1]], x_lab = x_label)
+      }
+      plot_to_return$layers[[3]] <- NULL
+      # statistical_test_plot(test_output()[[1]], input$variable_col, input$test_col)
+    }
+    plot_to_return 
+  })
+  
+  # output$statistical_test_plot_out <- renderPlotly({
+  output$statistical_test_plot_out <- renderPlot({
+      req(statistical_test_plot_output())
+      statistical_test_plot_output()
   })   
+  
+  
+  # download volcano plot
+  output$download_statistical_test_plot_options_ui <- renderUI({
+    req(statistical_test_plot_output())
+    h4("Download Options")
+  })
+  
+  output$download_statistical_test_plot_width_ui <- renderUI({
+    req(statistical_test_plot_output())
+    numericInput("download_statistical_test_plot_width", "Width (inches)", value = 12, min = 1)
+  })
+  
+  output$download_statistical_test_plot_height_ui <- renderUI({
+    req(statistical_test_plot_output())
+    numericInput("download_statistical_test_plot_height", "Height (inches)", value = 8, min = 1)
+  })
+  
+  output$download_statistical_test_plot_type_ui <- renderUI({
+    req(statistical_test_plot_output())
+    selectInput("download_statistical_test_plot_type", "File Type", choices = c("pdf", "png", "jpg"))
+  })
+  
+  output$download_statistical_test_plot_plot_ui <- renderUI({
+    req(statistical_test_plot_output())
+    downloadButton("download_statistical_test_plot_plot", "Download Plot")
+  })
+  
+  # Download handler
+  output$download_statistical_test_plot_plot <- downloadHandler(
+    filename = function() {
+      paste0("olink_volcano_plot_", Sys.Date(), ".", input$download_statistical_test_plot_type)
+    },
+    content = function(file) {
+      ggsave(
+        filename = file,
+        plot = statistical_test_plot_output(), # Use the stored plot
+        device = input$download_statistical_test_plot_type,
+        width = input$download_statistical_test_plot_width, 
+        height = input$download_statistical_test_plot_height
+      )
+    }
+  )
+  
+  
+  
+  
   
   output$test_help <- renderText({
     req(input$test_col)
@@ -1302,13 +1393,13 @@ server <- function(input, output, session) {
     } else {
       df2use <- df
       
-      if(input$panel != "all"){
+      if(input$stats_panel_col != "all"){
         df2use <- df2use %>% dplyr::filter(Panel == input$stats_panel_col)
       }
       
       list2pass <- df2use %>% 
         dplyr::distinct(OlinkID) %>%
-        dplyr::pull()
+        dplyr::pull(OlinkID)
     }
     
     list2pass
@@ -1654,7 +1745,6 @@ server <- function(input, output, session) {
  })
  
  # download lmer plot
- 
  output$download_lmer_options_ui <- renderUI({
    req(olink_lmer_plot_out())
    h4("Download Options")
