@@ -1132,27 +1132,27 @@ server <- function(input, output, session) {
   
   # download volcano plot
   output$download_statistical_test_plot_options_ui <- renderUI({
-    req(statistical_test_plot_output())
-    h4("Download Options")
+    req(statistical_test_plot_output(), input$test_col %in% c("olink_ttest", "olink_wilcox"))
+    h4("Download Volcano Plot")
   })
   
   output$download_statistical_test_plot_width_ui <- renderUI({
-    req(statistical_test_plot_output())
+    req(statistical_test_plot_output(), input$test_col %in% c("olink_ttest", "olink_wilcox"))
     numericInput("download_statistical_test_plot_width", "Width (inches)", value = 12, min = 1)
   })
   
   output$download_statistical_test_plot_height_ui <- renderUI({
-    req(statistical_test_plot_output())
+    req(statistical_test_plot_output(), input$test_col %in% c("olink_ttest", "olink_wilcox"))
     numericInput("download_statistical_test_plot_height", "Height (inches)", value = 8, min = 1)
   })
   
   output$download_statistical_test_plot_type_ui <- renderUI({
-    req(statistical_test_plot_output())
+    req(statistical_test_plot_output(), input$test_col %in% c("olink_ttest", "olink_wilcox"))
     selectInput("download_statistical_test_plot_type", "File Type", choices = c("pdf", "png", "jpg"))
   })
   
   output$download_statistical_test_plot_plot_ui <- renderUI({
-    req(statistical_test_plot_output())
+    req(statistical_test_plot_output(), input$test_col %in% c("olink_ttest", "olink_wilcox"))
     downloadButton("download_statistical_test_plot_plot", "Download Plot")
   })
   
