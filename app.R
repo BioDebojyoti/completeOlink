@@ -1078,7 +1078,7 @@ server <- function(input, output, session) {
     req(
       test_output(), 
       input$variable_col, 
-      input$test_col 
+      input$test_col %in% c("olink_ttest", "olink_wilcox")
     )
     textInput("volcano_alternate_x_label", "Alternate x-axis label", value = "")
   })
@@ -1087,7 +1087,7 @@ server <- function(input, output, session) {
     req(
       test_output(), 
       input$variable_col, 
-      input$test_col 
+      input$test_col %in% c("olink_ttest", "olink_wilcox")
     )
     radioButtons("volcano_olink_specific_logical", "Use specific OlinkID(s)", choices = c(FALSE,TRUE))
   })
@@ -1106,7 +1106,6 @@ server <- function(input, output, session) {
       input$volcano_olink_specific_logical
     )
     if(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric")){
-      # plot_plotly_msg(paste0("Try <span style='color:green;'>", paste0(input$test_col, "_posthoc", collapse = ""),"</span> analysis"))
       plot_to_return <- plot_ggplot_msg(paste0("Try <span style='color:green;'>", paste0(input$test_col, "_posthoc", collapse = ""),"</span> analysis"))
     } else {
       x_label <- ifelse(input$volcano_alternate_x_label == "", "Estimate", input$volcano_alternate_x_label)
@@ -1118,12 +1117,10 @@ server <- function(input, output, session) {
         plot_to_return <- OlinkAnalyze::olink_volcano_plot(test_output()[[1]], x_lab = x_label)
       }
       plot_to_return$layers[[3]] <- NULL
-      # statistical_test_plot(test_output()[[1]], input$variable_col, input$test_col)
     }
     plot_to_return 
   })
   
-  # output$statistical_test_plot_out <- renderPlotly({
   output$statistical_test_plot_out <- renderPlot({
       req(statistical_test_plot_output())
       statistical_test_plot_output()
