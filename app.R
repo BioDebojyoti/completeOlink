@@ -256,6 +256,7 @@ server <- function(input, output, session) {
                             bsCollapsePanel("Plot Options", style = "primary",                        
                               uiOutput("statistical_test_boxplot_variable_ui"),
                               uiOutput("statistical_test_boxplot_olink_ui"),
+                              uiOutput("statistical_test_boxplot_olink_use_test_result_ui"),
                               uiOutput("statistical_test_boxplot_number_ui"), 
                               uiOutput("statistical_test_boxplot_run_ui")
                          ),
@@ -1108,16 +1109,14 @@ server <- function(input, output, session) {
   
   olink_ids_to_use <- reactive({
     req(test_output(), input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric"), input$use_olink_ids == TRUE)
-    if(is.null(input$filter_term_olink_ids) | input$filter_term_olink_ids == ""){
+    if(is.null(input$filter_term_olink_ids) || input$filter_term_olink_ids == ""){
       test_output()[[1]] %>% 
         dplyr::filter(Threshold == 'Significant') %>%
-        dplyr::select(OlinkID) %>%
-        dplyr::distinct() %>%
-        dplyr::pull()
+        dplyr::distinct(OlinkID) %>%
+        dplyr::pull(OlinkID)
     } else {
       test_output()[[1]] %>% 
         dplyr::filter(Threshold == 'Significant' & term == input$filter_term_olink_ids) %>%
-        dplyr::select(OlinkID) %>%
         dplyr::distinct(OlinkID) %>%
         dplyr::pull(OlinkID)
     }
@@ -1314,6 +1313,20 @@ server <- function(input, output, session) {
     
     list2pass
   })
+
+  output$statistical_test_boxplot_olink_use_test_result_ui <- renderUI({
+    req(input$test_col, input$stats_panel_col, input$use_filtered_data_logical)
+    if(input$use_filtered_data_logical){
+      req(filtered_data())
+      df <- filtered_data()
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
+    radioButtons("use_test_results", "Use ttest/anova posthoc results", choices = c(FALSE, TRUE))
+  })
+  
+  
   
   output$statistical_test_boxplot_olink_ui <- renderUI({
     req(input$test_col, input$stats_panel_col, input$use_filtered_data_logical)
@@ -1355,13 +1368,22 @@ server <- function(input, output, session) {
   rv <- reactiveValues(plot = NULL)
   
   output$statistical_test_boxplot_out <- renderPlot({
-    req(input$stats_panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot, input$use_filtered_data_logical)
+    req(input$stats_panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot, input$use_filtered_data_logical, input$use_test_results)
     if(input$use_filtered_data_logical){
       req(filtered_data())
       df2plot <- filtered_data()
     } else {
       req(full_data())
       df2plot <- full_data()
+    }
+    if(input$use_test_results){
+      req(input$test_col)
+      if(input$test_col == "olink_ttest"){
+        req(test_output())
+      }
+      if(input$test_col == "olink_anova"){
+        req(posthoc_output())
+      }
     }
     
     
@@ -1374,15 +1396,28 @@ server <- function(input, output, session) {
       dplyr::filter(!(grepl("control|ctrl", Assay, ignore.case = TRUE))) %>%
       dplyr::filter(!is.na(NPX))
     
+    if (as.logical(input$use_test_results) && input$test_col == "olink_ttest"){
+      ttest_results <- test_output()[[1]]
+    }  else {
+      ttest_results <- NULL
+    }
+    if (as.logical(input$use_test_results) && input$test_col == "olink_anova"){
+      posthoc_results <- posthoc_output()[[1]]
+    }  else {
+      posthoc_results <- NULL
+    }
+    
     p <- OlinkAnalyze::olink_boxplot(
       df = df2plot,
       variable = input$boxplot_variable_list,
       olinkid_list = input$boxplot_olink_list,
       verbose = FALSE,
-      number_of_proteins_per_plot = input$boxplot_number
+      number_of_proteins_per_plot = input$boxplot_number,
+      posthoc_results = posthoc_results,
+      ttest_results = ttest_results
     )
     
-    rv$plot <- p[[1]] # Store the plot in reactive values
+    rv$plot <- p[[1]]
     
     p[[1]]
     
