@@ -34,7 +34,13 @@ source("R/functions.R")
 options(shiny.maxRequestSize=160*1024^2)
 
 ui <- fluidPage(
-  uiOutput("olink_data")
+  uiOutput("olink_data"),
+  tags$footer(
+    div(
+      style = "position: fixed; bottom: 0; width: 100%; background-color: #f8f9fa; padding: 10px; text-align: center; border-top: 1px solid #ddd;",
+      "© 2025 Debojyoti Das Bioinformactics Unit, Core Facility & Clinical Genomics Linköping, Linköping University"
+    )
+  )
 )
 
 
