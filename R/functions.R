@@ -958,5 +958,18 @@ return(list(plot_out, p_out_table))
   
 }
 
+clean_yticks <- function(p, m){
+  
+  p_details <- ggplot2::ggplot_build(p)
+  ybreaks <- p_details$layout$panel_params[[1]]$y$breaks
+  new_ybreaks <- comprehenr::to_vec(for(b in ybreaks) gsub("_", " ", b))
+  if(m == "olink_pathway_heatmap"){
+    return(p + scale_y_discrete(labels = new_ybreaks))
+  } else {
+    return(p + scale_x_discrete(labels = new_ybreaks))
+  }
+
+  
+}
 
 

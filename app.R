@@ -86,7 +86,7 @@ server <- function(input, output, session) {
                    "",
                    sidebar = sidebar(
                      div(style = "overflow-y: auto; max-height: 90vh;", 
-                         bsCollapse(id = "sidebar_collapse_tab2", open = c("Detection Method"), multiple = TRUE,
+                         bsCollapse(id = "sidebar_collapse_tab2", open = c("Detection Method", "Method-specific options"), multiple = TRUE,
                                     bsCollapsePanel("Detection Method", style = "primary",
                                                     uiOutput("plot_method_col_ui"),
                                                    uiOutput("outlier_color_ui"),
@@ -158,7 +158,7 @@ server <- function(input, output, session) {
                      "",
                      sidebar = sidebar(
                        div(style = "overflow-y: auto; max-height: 90vh;", 
-                           bsCollapse(id = "sidebar_collapse_tab4", open = c("Method"), multiple = TRUE,
+                           bsCollapse(id = "sidebar_collapse_tab4", open = c("Method", "Parameters", "Run"), multiple = TRUE,
                                       bsCollapsePanel("Method", style = "primary",
                                                       uiOutput("use_filtered_data_logical_ui"),
                                                       uiOutput("stats_panel_col_ui"),
@@ -217,7 +217,6 @@ server <- function(input, output, session) {
                                 div(
                                   style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;",
                                   plotOutput("statistical_test_plot_out", height = "800px", width = "800px")
-                                  # plotlyOutput("statistical_test_plot_out", height = "800px", width = "800px")
                                 ),
                        ),
                        tabPanel("Statistical test log", uiOutput("test_log")),
@@ -232,26 +231,26 @@ server <- function(input, output, session) {
                    "",
                    sidebar = sidebar(
                      div(style = "overflow-y: auto; max-height: 90vh;", 
-                         bsCollapse(id = "sidebar_collapse_tab5", open = c("posthoc options"), multiple = TRUE,
+                         bsCollapse(id = "sidebar_collapse_tab5", multiple = TRUE,
                                     bsCollapsePanel("posthoc options", style = "primary",   
-                                      uiOutput("run_posthoc_ui"),
-                                      uiOutput("posthoc_variable_ui"),
-                                      uiOutput("use_olink_ids_ui"),
-                                      uiOutput("filter_term_olink_ids_ui"),
-                                      uiOutput("olink_ids_ui"),
-                                      uiOutput("posthoc_random_ui"),
-                                      uiOutput("posthoc_effect_ui"),
-                                      uiOutput("posthoc_covariates_ui"),
-                                      uiOutput("posthoc_mean_return_ui"),
-                                      uiOutput("posthoc_padjt_method_ui"),
-                                      uiOutput("posthoc_test_ui")
+                                                    uiOutput("run_posthoc_ui"),
+                                                    uiOutput("posthoc_variable_ui"),
+                                                    uiOutput("use_olink_ids_ui"),
+                                                    uiOutput("filter_term_olink_ids_ui"),
+                                                    uiOutput("olink_ids_ui"),
+                                                    uiOutput("posthoc_random_ui"),
+                                                    uiOutput("posthoc_effect_ui"),
+                                                    uiOutput("posthoc_covariates_ui"),
+                                                    uiOutput("posthoc_mean_return_ui"),
+                                                    uiOutput("posthoc_padjt_method_ui"),
+                                                    uiOutput("posthoc_test_ui")
                                     ),
-                                  bsCollapsePanel("pass formula (optional)", style = "danger",                     
-                                    uiOutput("posthoc_model_formula_ui"),
-                                    uiOutput("posthoc_effect_formula_ui")
-                                  )
-                                )
+                                    bsCollapsePanel("pass formula (optional)", style = "danger",                     
+                                                    uiOutput("posthoc_model_formula_ui"),
+                                                    uiOutput("posthoc_effect_formula_ui")
+                                    )
                          )
+                     )
                    ),
                    tabsetPanel(
                      tabPanel("Posthoc Statistical test result", DT::dataTableOutput("posthoc_test_result")),
@@ -261,12 +260,55 @@ server <- function(input, output, session) {
                  )
                )
                ),
+               tabPanel("Pathway Enrichment", fluidPage(
+                 page_sidebar(
+                   "",
+                   sidebar = sidebar(
+                     div(style = "overflow-y: auto; max-height: 90vh;",
+                         bsCollapse(id = "sidebar_collapse_tab6", open = c("enrichment options","visualization options"), multiple = TRUE,
+                                    bsCollapsePanel("enrichment options", style = "primary",
+                                                    uiOutput("run_pathway_enrichment_ui"),
+                                                    uiOutput("pathway_enrichment_method_ui"),
+                                                    uiOutput("pathway_enrichment_ontology_ui"),
+                                                    uiOutput("pathway_enrichment_organism_ui"),
+                                                    uiOutput("pathway_enrichment_contrast_ui"),
+                                                    uiOutput("pathway_enrichment_pvalue_cutoff_ui"),
+                                                    uiOutput("pathway_enrichment_estimate_cutoff_ui")
+                                    ),
+                                    bsCollapsePanel("visualization options", style = "success",
+                                                    uiOutput("pathway_visual_mode_ui"),
+                                                    uiOutput("pathway_visual_keyword_ui"),
+                                                    uiOutput("pathway_visual_number_of_terms_ui"),
+                                                    uiOutput("pathway_visual_run_ui")
+                                    ),
+                                    bsCollapsePanel("Download options", style = "danger",
+                                                    uiOutput("download_pathway_visual_options_ui"),
+                                                    uiOutput("download_pathway_visual_width_ui"),
+                                                    uiOutput("download_pathway_visual_height_ui"),
+                                                    uiOutput("download_pathway_visual_type_ui"),
+                                                    uiOutput("download_pathway_visual_plot_ui")
+                                    )
+                                    
+                         )
+                     )
+                   ),
+                   tabsetPanel(
+                     tabPanel("Pathway Enrichment Result", DT::dataTableOutput("pathway_enrichment_result")),
+                     tabPanel("Pathway Enrichment Log", uiOutput("pathway_enrichment_log")),
+                     tabPanel("Documentation/ Help", htmlOutput("pathway_enrichment_help")),
+                     tabPanel("Pathway Enrichment Plot", plotOutput("pathway_visual_plot")),
+                     tabPanel("Pathway Enrichment Plot log", uiOutput("pathway_visual_log")),
+                     tabPanel("Plot Documentation/ Help", htmlOutput("pathway_visual_help"))
+                   )
+                   )
+                 )
+               ),
                tabPanel("Additional Visualization", fluidPage(
                  page_sidebar(
                    "",
                    sidebar = sidebar(
                      div(style = "overflow-y: auto; max-height: 90vh;", 
-                         bsCollapse(id = "sidebar_collapse_tab6", open = c("plot options"), multiple = TRUE,
+                         bsCollapse(id = "sidebar_collapse_tab7", open = c("plot options"), multiple = TRUE,
                             bsCollapsePanel("Plot Options", style = "primary",                        
                               uiOutput("statistical_test_boxplot_variable_ui"),
                               uiOutput("statistical_test_boxplot_olink_ui"),
@@ -368,7 +410,7 @@ server <- function(input, output, session) {
   
   meta_data <- reactive({
     req(input$meta_file)
-    read.csv(input$meta_file$datapath, sep=",")
+    readr::read_csv(input$meta_file$datapath, col_types = c(SampleID = "character"))
   })
   
   # Generate and display data tables
@@ -614,8 +656,8 @@ server <- function(input, output, session) {
     
     output$exploratory_output <- renderPlot({
     req(outlier_detection_plot_output())
-    rv_outlier$plot <- outlier_detection_plot_output() # Store the plot in reactive values
-    
+      
+    rv_outlier$plot <- outlier_detection_plot_output() 
     outlier_detection_plot_output()[[1]]
   })
   
@@ -769,11 +811,21 @@ server <- function(input, output, session) {
 
   # statistical page
   # Generate UI for selecting variable for statistical test
+  
+  output$filter_help <- renderText({
+    req(full_data())
+    temp = Rd2HTML(Rd_fun(help("filter", package = "dplyr")), out = tempfile("docs"))
+    content = read_file(temp)
+    file.remove(temp)
+    content
+  })
+  
+  
   filtered_data <- reactive({
     req(full_data(), input$filter_data_button)
     clean_data <- full_data()
     
-    if (input$filter_sample_id_logical) {
+    if (as.logical(input$filter_sample_id_logical)) {
       req(input$filter_sample_id_list)
 
       if(length(input$filter_sample_id_list) > 0){
@@ -781,7 +833,7 @@ server <- function(input, output, session) {
       }
     }
     
-    if (input$filter_assay_logical) {
+    if (as.logical(input$filter_assay_logical)) {
       req(input$filter_assay_list)  
 
       if(length(input$filter_assay_list) > 0){
@@ -822,7 +874,7 @@ server <- function(input, output, session) {
   
   output$stats_panel_col_ui <- renderUI({
     req(full_data(), input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data() 
     } else {
@@ -834,7 +886,7 @@ server <- function(input, output, session) {
   
   output$test_col_ui <- renderUI({
     req(full_data(),input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
     } else {
       req(full_data())      
@@ -845,7 +897,7 @@ server <- function(input, output, session) {
   
   column_types <- reactive({
     req(input$stats_panel_col, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data() 
     } else {
@@ -874,7 +926,7 @@ server <- function(input, output, session) {
   
   output$variable_col_ui <- renderUI({
     req(input$test_col, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data() 
     } else {
@@ -891,7 +943,7 @@ server <- function(input, output, session) {
   
   output$pair_id_ui <- renderUI({
     req(input$test_col %in% c("olink_ttest", "olink_wilcox"), input$use_filtered_data_logical) 
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
     } else {
       req(full_data())
@@ -901,7 +953,7 @@ server <- function(input, output, session) {
   
   output$pair_id_col_ui <- renderUI({
     req(input$test_col %in% c("olink_ttest","olink_wilcox"), input$pair_id == TRUE, input$use_filtered_data_logical) 
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -913,7 +965,7 @@ server <- function(input, output, session) {
 
   output$covariate_col_ui <- renderUI({
     req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), input$use_filtered_data_logical) 
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -931,7 +983,7 @@ server <- function(input, output, session) {
   
   output$model_formula_ui <- renderUI({
     req(input$test_col %in% c("olink_anova", "olink_lmer"), input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
     } else {
       req(full_data())
@@ -946,7 +998,7 @@ server <- function(input, output, session) {
   output$return_covariate_ui <- renderUI({
     req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), input$use_filtered_data_logical) 
     
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
     } else {
       req(full_data())
@@ -957,7 +1009,7 @@ server <- function(input, output, session) {
   
   output$dependence_ui <- renderUI({
     req(input$test_col %in% c("olink_one_non_parametric"), input$use_filtered_data_logical) 
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
     } else {
       req(full_data())
@@ -968,7 +1020,7 @@ server <- function(input, output, session) {
   
   output$subject_ui <- renderUI({
     req(input$test_col %in% c("olink_one_non_parametric"), input$dependence_text == TRUE, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -980,7 +1032,7 @@ server <- function(input, output, session) {
   
   output$random_effects_ui <- renderUI({
     req(input$test_col %in% c("olink_lmer"), input$use_filtered_data_logical) 
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -992,7 +1044,7 @@ server <- function(input, output, session) {
   
   output$run_button_ui <- renderUI({
     req(input$test_col, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       if(!is.null(filtered_data()) &&  !is.null(input$test_col)){
         actionButton("run_test",paste0("Run ", gsub("_"," ",input$test_col)))
@@ -1007,13 +1059,13 @@ server <- function(input, output, session) {
   })
   
   test_output <- reactive({
+    req(input$run_test)
     req(
-      input$run_test,
       input$stats_panel_col,
       input$test_col, 
       input$use_filtered_data_logical
     )
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -1032,6 +1084,7 @@ server <- function(input, output, session) {
       req(input$variable_col, input$dependence_text)
     }
     
+    
     statistical_test(
       df = df,
       panel_col = input$stats_panel_col,
@@ -1045,6 +1098,8 @@ server <- function(input, output, session) {
       subject_val = if (input$test_col %in% c("olink_one_non_parametric")  & input$dependence_text == TRUE) input$subject_text else NULL,
       return_covariates = if (input$test_col %in% c("olink_lmer")) input$return_covariates else FALSE
     )
+
+  
   })
   
   output$test_result <- DT::renderDataTable({
@@ -1073,10 +1128,12 @@ server <- function(input, output, session) {
   
   output$test_log <- renderUI({
     req(input$run_test, test_output())
+    
     message_items <- lapply(test_output()[[2]], function(msg) {
       tags$p(msg)
     })
     do.call(tagList, message_items)
+ 
   })
   # statistical test plot
   
@@ -1136,7 +1193,7 @@ server <- function(input, output, session) {
   # download volcano plot
   output$download_statistical_test_plot_options_ui <- renderUI({
     req(statistical_test_plot_output(), input$test_col %in% c("olink_ttest", "olink_wilcox"))
-    h4("Download Volcano Plot")
+    h4("Download Volcano")
   })
   
   output$download_statistical_test_plot_width_ui <- renderUI({
@@ -1174,9 +1231,6 @@ server <- function(input, output, session) {
       )
     }
   )
-  
-  
-  
   
   
   output$test_help <- renderText({
@@ -1223,7 +1277,7 @@ server <- function(input, output, session) {
   
   output$run_posthoc_ui <- renderUI({
     req(full_data(), input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -1237,7 +1291,7 @@ server <- function(input, output, session) {
   
   output$posthoc_effect_ui <- renderUI({
     req(input$test_col %in% c( "olink_anova", "olink_lmer", "olink_ordinalRegression"), test_output(), input$use_filtered_data_logical) 
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -1249,7 +1303,7 @@ server <- function(input, output, session) {
   
   output$posthoc_effect_formula_ui <- renderUI({
     req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), test_output(),input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -1261,7 +1315,7 @@ server <- function(input, output, session) {
   
   output$posthoc_mean_return_ui <- renderUI({
     req(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression"), test_output(),input$use_filtered_data_logical) 
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -1291,7 +1345,7 @@ server <- function(input, output, session) {
       input$posthoc_olinkid_list,
       input$use_filtered_data_logical
     )
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -1358,7 +1412,7 @@ server <- function(input, output, session) {
   
   output$statistical_test_boxplot_variable_ui <- renderUI({
     req(input$test_col, input$stats_panel_col,input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -1375,7 +1429,7 @@ server <- function(input, output, session) {
   
   statistical_test_boxplot_olink_list <- reactive({
     req(input$test_col, input$stats_panel_col, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -1410,7 +1464,7 @@ server <- function(input, output, session) {
 
   output$statistical_test_boxplot_olink_use_test_result_ui <- renderUI({
     req(input$test_col, input$stats_panel_col, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -1424,7 +1478,7 @@ server <- function(input, output, session) {
   
   output$statistical_test_boxplot_olink_ui <- renderUI({
     req(input$test_col, input$stats_panel_col, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -1436,7 +1490,7 @@ server <- function(input, output, session) {
   
   output$statistical_test_boxplot_number_ui <- renderUI({
     req(input$test_col, input$stats_panel_col, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -1448,7 +1502,7 @@ server <- function(input, output, session) {
   
   output$statistical_test_boxplot_run_ui <- renderUI({
     req(input$test_col, input$stats_panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
     } else {
       req(full_data())
@@ -1463,7 +1517,7 @@ server <- function(input, output, session) {
   
   output$statistical_test_boxplot_out <- renderPlot({
     req(input$stats_panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot, input$use_filtered_data_logical, input$use_test_results)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df2plot <- filtered_data()
     } else {
@@ -1519,7 +1573,7 @@ server <- function(input, output, session) {
   
   output$download_options_ui <- renderUI({
     req(input$test_col, input$stats_panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
     } else {
       req(full_data())
@@ -1529,7 +1583,7 @@ server <- function(input, output, session) {
   
   output$download_width_ui <- renderUI({
     req(input$test_col, input$stats_panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
     } else {
       req(full_data())
@@ -1539,7 +1593,7 @@ server <- function(input, output, session) {
   
   output$download_height_ui <- renderUI({
     req(input$test_col, input$stats_panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
     } else {
       req(full_data())
@@ -1549,7 +1603,7 @@ server <- function(input, output, session) {
   
   output$download_type_ui <- renderUI({
     req(input$test_col, input$stats_panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
     } else {
       req(full_data())
@@ -1559,7 +1613,7 @@ server <- function(input, output, session) {
   
   output$download_plot_ui <- renderUI({
     req(input$test_col, input$stats_panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot, input$use_filtered_data_logical)
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
     } else {
       req(full_data())
@@ -1583,16 +1637,324 @@ server <- function(input, output, session) {
     }
   )
   
-  
+
   output$posthoc_test_help <- renderText({
-    req(input$test_col, test_output())
+    req(!(input$test_col %in% c("olink_ttest", "olink_wilcox")), test_output())
     temp = Rd2HTML(Rd_fun(paste0(input$test_col,"_posthoc", collapse = "")),
                    out = tempfile("docs"))
     content = read_file(temp)
     file.remove(temp)
     content
   })
+  
+  # Pathway Enrichment Page
+  output$pathway_enrichment_help <- renderText({
+    req(input$test_col)
+    if(input$test_col %in% c("olink_ttest", "olink_wilcox")){
+      req(test_output())
+    } else {
+      req(posthoc_output())
+    }
+    
+    temp = Rd2HTML(Rd_fun("olink_pathway_enrichment"),
+                   out = tempfile("docs"))
+    content = read_file(temp)
+    file.remove(temp)
+    content
+  })
+  
+  output$run_pathway_enrichment_ui <- renderUI({
+    req(input$test_col)
+    if(input$test_col %in% c("olink_ttest", "olink_wilcox")){
+      req(test_output())
+      actionButton("run_pathway_enrichment", "Run Pathway Enrichment")
+    } else {
+      req(posthoc_output())
+      actionButton("run_pathway_enrichment", "Run Pathway Enrichment")
+    }
+  })
+  
+  output$pathway_enrichment_method_ui <- renderUI({
+    req(input$test_col)
+    if(input$test_col %in% c("olink_ttest", "olink_wilcox")){
+      req(test_output(), input$run_test)
+      selectInput("pathway_enrichment_method", "Select Method", choices = c("GSEA", "ORA"))
+    } else {
+      req(posthoc_output(), input$run_posthoc)
+      selectInput("pathway_enrichment_method", "Select Method", choices = c("GSEA", "ORA"))
+    }
+  })
+  
+  output$pathway_enrichment_ontology_ui <- renderUI({
+    req(input$test_col)
+    if(input$test_col %in% c("olink_ttest", "olink_wilcox")){
+      req(test_output(), input$run_test)
+      selectInput("pathway_enrichment_ontology", "Select Ontology", choices = c("MSigDb", "KEGG", "GO", "Reactome"))
+    } else {
+      req(posthoc_output(), input$run_posthoc)
+      selectInput("pathway_enrichment_ontology", "Select Ontology", choices = c("MSigDb", "KEGG", "GO", "Reactome"))
+    }
+  })
+  
+  output$pathway_enrichment_organism_ui <- renderUI({
+    req(input$test_col)
+    if(input$test_col %in% c("olink_ttest", "olink_wilcox")){
+      req(test_output(), input$run_test)
+      selectInput("pathway_enrichment_organism", "Select Organism", choices = c("human", "mouse"))
+    } else {
+      req(posthoc_output(), input$run_posthoc)
+      selectInput("pathway_enrichment_organism", "Select Organism", choices = c("human", "mouse"))
+    }
+  })
+  
+  
+  output$pathway_enrichment_contrast_ui <- renderUI({
+    req(input$test_col)
+    if(!(input$test_col %in% c("olink_ttest", "olink_wilcox"))){
+      req(posthoc_output(), input$run_posthoc)
+      contrast_list <- posthoc_output()[[1]] %>% dplyr::distinct(contrast) %>% dplyr::pull(contrast)
+      selectInput("pathway_enrichment_contrast", "Select contrast", choices = contrast_list)
+    }
+  })
+  
+  output$pathway_enrichment_pvalue_cutoff_ui <- renderUI({
+    req(input$test_col)
+    if(!(input$test_col %in% c("olink_ttest", "olink_wilcox"))){
+      req(posthoc_output(), input$run_posthoc, input$pathway_enrichment_method == "ORA")
+      numericInput("pathway_enrichment_pvalue_cutoff", "Select p-value cutoff", value = 0.05, min = 0, max = 1)
+    } else {
+      req(test_output(), input$run_test, input$pathway_enrichment_method == "ORA")
+      numericInput("pathway_enrichment_pvalue_cutoff", "Select p-value cutoff", value = 0.05, min = 0, max = 1)
+      
+    }
+  })
+  output$pathway_enrichment_estimate_cutoff_ui <- renderUI({
+    req(input$test_col)
+    
+    if(!(input$test_col %in% c("olink_ttest", "olink_wilcox"))){
+      req(posthoc_output(), input$run_posthoc, input$pathway_enrichment_method == "ORA")
+      numericInput("pathway_enrichment_estimate_cutoff", "Select estimate cutoff", value = 0.0, min = 0, max = 10)
+    } else {
+      req(test_output(), input$run_test, input$pathway_enrichment_method == "ORA")
+      numericInput("pathway_enrichment_estimate_cutoff", "Select estimate cutoff", value = 0.0, min = 0, max = 10000)
+    }
+  })
+  
+  pathway_enrichment_result_output <- reactive({
+    req(
+      input$pathway_enrichment_organism, 
+      input$pathway_enrichment_ontology, 
+      input$pathway_enrichment_method,
+      input$use_filtered_data_logical,
+      input$run_pathway_enrichment
+    )
+    if(as.logical(input$use_filtered_data_logical)){
+      req(filtered_data())
+      df <- filtered_data() 
+    } else {
+      req(full_data())
+      df <- full_data()
+    }
+    
+    if(input$test_col %in% c("olink_ttest", "olink_wilcox")){
+      req(test_output())
+      test_results <- test_output()[[1]]
+    } else {
+      req(posthoc_output())
+      test_results <- posthoc_output()[[1]] %>% 
+          dplyr::filter(contrast == input$pathway_enrichment_contrast)
+    }
+    
+    if(input$pathway_enrichment_method == "ORA"){
+      req(input$pathway_enrichment_pvalue_cutoff, input$pathway_enrichment_estimate_cutoff)
+    }
+    
+    if(input$stats_panel_col != "all"){
+      df <- df %>% dplyr::filter(Panel == input$stats_panel_col)
+    }
+    
+    df <- df %>% 
+      dplyr::filter(!grepl("control|ctrl", SampleID, ignore.case = TRUE)) %>% 
+      dplyr::filter(!grepl("control|ctrl", Assay, ignore.case = TRUE))
+    
 
+    
+    verbose_msg <- capture.output(
+      pathway_enrichment <- OlinkAnalyze::olink_pathway_enrichment(
+      data = df,
+      test_results = test_results ,
+      method = input$pathway_enrichment_method,
+      ontology = input$pathway_enrichment_ontology,
+      organism = input$pathway_enrichment_organism,
+      pvalue_cutoff = if (input$pathway_enrichment_method == "ORA") input$pathway_enrichment_pvalue_cutoff else 0.05,
+      estimate_cutoff = if (input$pathway_enrichment_method == "ORA") input$pathway_enrichment_estimate_cutoff else 0
+     ),
+     type = "message"
+    )
+    
+    return(list(pathway_enrichment, verbose_msg, test_results))
+    
+  })
+  
+  output$pathway_enrichment_result <- DT::renderDataTable({
+    req(input$run_pathway_enrichment, pathway_enrichment_result_output())
+    if(input$test_col == "olink_ttest"){
+      caption_out <- paste0("pathway enrichment on ",input$test_col, " results")
+    } else {
+      caption_out <- paste0("pathway enrichment on ",input$test_col, "_posthoc results")
+    }
+    datatable(
+      pathway_enrichment_result_output()[[1]] %>% 
+        as.data.frame() %>%
+        dplyr::mutate(across(where(is.numeric), ~ round(., 3))),
+      caption = caption_out,
+      filter = "top", 
+      extensions = 'Buttons', 
+      options = list(
+        dom = 'Bflrtip',
+        buttons = list('copy', 'csv', 'excel', list(
+          extend = "collection",
+          text = 'Show All',
+          action = DT::JS("function ( e, dt, node, config ) {
+                                    dt.page.len(-1);
+                                    dt.ajax.reload();
+                                }")
+        )
+        )
+      )
+    )
+  })
+  
+  output$pathway_enrichment_log <- renderUI({
+    req(input$run_pathway_enrichment, pathway_enrichment_result_output())
+    message_items <- lapply(pathway_enrichment_result_output()[[2]], function(msg) {
+      tags$p(msg)
+    })
+    do.call(tagList, message_items)
+  })
+  
+  output$pathway_visual_mode_ui <- renderUI({
+    req(pathway_enrichment_result_output())
+    selectInput("pathway_visual_mode", "Select plot type", choices = c("olink_pathway_heatmap", "olink_pathway_visualization"))
+  })
+  
+  output$pathway_visual_help <- renderText({
+    req(input$pathway_visual_mode)
+    temp = Rd2HTML(Rd_fun(input$pathway_visual_mode),out = tempfile("docs"))
+    content = read_file(temp)
+    file.remove(temp)
+    content
+  })
+  
+  output$pathway_visual_keyword_ui <- renderUI({
+    req(pathway_enrichment_result_output())
+    textInput("pathway_visual_keyword", "Keyword to filter enrichment results", value = '')
+  })
+  
+  output$pathway_visual_number_of_terms_ui <- renderUI({
+    req(pathway_enrichment_result_output())
+    numericInput("pathway_visual_number_of_terms", "Number of terms", value = 20, min = 1, max = 100)
+  })
+  
+  output$pathway_visual_run_ui <- renderUI({
+    req(pathway_enrichment_result_output(), input$pathway_visual_mode, input$pathway_visual_number_of_terms)
+    actionButton("pathway_visual_run", "Plot enrichment results")
+  })
+  
+  observeEvent(input$pathway_visual_run, {})
+  
+  # Reactive values to track the plot
+  rv_pathway_visual <- reactiveValues(plot = NULL)
+  
+  pathway_visual_output <- reactive({
+    req(
+      pathway_enrichment_result_output(), 
+      input$pathway_visual_mode, 
+      input$pathway_visual_number_of_terms,
+      input$pathway_visual_run
+    )
+    if(input$pathway_visual_mode =="olink_pathway_heatmap"){
+      verbose_msg <- capture.output(
+        pathway_plot <- olink_pathway_heatmap(
+        enrich_results = pathway_enrichment_result_output()[[1]],
+        test_results = pathway_enrichment_result_output()[[3]],
+        method = input$pathway_enrichment_method,
+        keyword = input$pathway_visual_keyword,
+        number_of_terms = input$pathway_visual_number_of_terms
+      ), type = "message")
+    } else {
+      verbose_msg <- capture.output(
+        pathway_plot <- olink_pathway_visualization(
+        enrich_results = pathway_enrichment_result_output()[[1]],
+        method = input$pathway_enrichment_method,
+        keyword = input$pathway_visual_keyword,
+        number_of_terms = input$pathway_visual_number_of_terms
+      ), type = "message")
+    }
+    if(is.ggplot(pathway_plot)){
+      pathway_plot <- clean_yticks(pathway_plot, input$pathway_visual_mode)
+    }
+    return(list(pathway_plot, verbose_msg))
+  })
+  
+  output$pathway_visual_plot <- renderPlot({
+    req(pathway_visual_output(), input$pathway_visual_run)
+    rv_pathway_visual$plot <- pathway_visual_output()[[1]] 
+    
+    pathway_visual_output()[[1]]
+  })
+  
+  output$pathway_visual_log <- renderUI({
+    req(pathway_visual_output(), input$pathway_visual_run)
+    message_items <- lapply(pathway_visual_output()[[2]], function(msg) {
+      tags$p(msg)
+    })
+    do.call(tagList, message_items)
+  })
+  
+  # Download Enrichment Visualization
+  
+  output$download_pathway_visual_options_ui <- renderUI({
+    req(pathway_visual_output(), input$pathway_visual_run)
+    h4("Download Options")
+  })
+  
+  output$download_pathway_visual_width_ui <- renderUI({
+    req(pathway_visual_output(), input$pathway_visual_run)
+    numericInput("download_pathway_visual_width", "Width (inches)", value = 8, min = 1)
+  })
+  
+  output$download_pathway_visual_height_ui <- renderUI({
+    req(pathway_visual_output(), input$pathway_visual_run)
+    numericInput("download_pathway_visual_height", "Height (inches)", value = 8, min = 1)
+  })
+  
+  output$download_pathway_visual_type_ui <- renderUI({
+    req(pathway_visual_output(), input$pathway_visual_run)
+    selectInput("download_pathway_visual_type", "File Type", choices = c("pdf", "png", "jpg"))
+  })
+  
+  output$download_pathway_visual_plot_ui <- renderUI({
+    req(pathway_visual_output(), input$pathway_visual_run)
+    downloadButton("download_pathway_visual_plot", "Download Plot")
+  })
+  
+  # Download handler
+  output$download_pathway_visual_plot <- downloadHandler(
+    filename = function() {
+      paste0(input$pathway_enrichment_method,"_", Sys.Date(), ".", input$download_pathway_visual_type)
+    },
+    content = function(file) {
+      ggsave(
+        filename = file,
+        plot = rv_pathway_visual$plot, # Use the stored plot
+        device = input$download_pathway_visual_type,
+        width = input$download_pathway_visual_width, 
+        height = input$download_pathway_visual_height
+      )
+    }
+  )
+  
 # lmer plot
   x_axis_variable_list <- reactive({
     req(
@@ -1617,7 +1979,7 @@ server <- function(input, output, session) {
       input$stats_panel_col,
       input$use_filtered_data_logical
     )
-    if(input$use_filtered_data_logical){
+    if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
     } else {
@@ -1683,7 +2045,7 @@ server <- function(input, output, session) {
      input$plot_col_variable, 
      input$use_filtered_data_logical
    )
-   if(input$use_filtered_data_logical){
+   if(as.logical(input$use_filtered_data_logical)){
      req(filtered_data())
    } else {
      req(full_data())
@@ -1711,7 +2073,7 @@ server <- function(input, output, session) {
      input$plot_button_lmer, 
      input$use_filtered_data_logical
    )
-   if(input$use_filtered_data_logical){
+   if(as.logical(input$use_filtered_data_logical)){
      req(filtered_data())
      df <- filtered_data()
    } else {
