@@ -1,1 +1,6 @@
 # olinkApp
+
+This shiny app relies on the olink's OlinkAnalyze package. Functions have been customised/added for exploring and analysing their datasets.
+
+https://github.com/Olink-Proteomics/OlinkRPackage/tree/master/OlinkAnalyze
+
