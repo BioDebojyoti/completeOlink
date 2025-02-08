@@ -43,9 +43,9 @@ list_of_outlier_detection_methods <- c(
 )
 
 list_of_outlier_plots <- c(
+  "olink_qc_plot",
   "olink_pca_plot",
-  "olink_umap_plot",
-  "olink_qc_plot"
+  "olink_umap_plot"
 )
 
 statistical_test_list <- c(
@@ -843,7 +843,7 @@ posthoc_statistics <- function(
 
 outlier_detection_plot <- function(
     method2use,
-    df,
+    df2check4outlier,
     panel = "all",
     color = "QC_Warning",
     x_value = 1L,
@@ -852,8 +852,8 @@ outlier_detection_plot <- function(
     drop_assays_logical = FALSE,
     drop_samples_logical = FALSE,
     byPanel_logical = FALSE,
-    outlierDefX_val = NA,
-    outlierDefY_val = NA,
+    outlierDefX_val = as.numeric(NA),
+    outlierDefY_val = as.numeric(NA),
     outlierLines_logical = FALSE,
     label_outliers_logical = TRUE,
     IQR_outlierDef_val = 3,
@@ -863,10 +863,10 @@ outlier_detection_plot <- function(
 ){
   
   if(panel != "all"){
-    df <- df %>% dplyr::filter(Panel == panel)
+    df2check4outlier <- df2check4outlier %>% dplyr::filter(Panel == panel)
   }
   
-  df <- df %>% 
+  df2check4outlier <- df2check4outlier %>% 
     dplyr::filter(!(grepl("control|ctrl", SampleID, ignore.case = TRUE))) %>%
     dplyr::filter(!(grepl("control|ctrl", Assay, ignore.case = TRUE)))
 
@@ -874,26 +874,7 @@ outlier_detection_plot <- function(
   
   if(method2use == "olink_umap_plot"){
     plot_out <- OlinkAnalyze::olink_umap_plot(
-      df = df,
-      color_g = as.character(color),
-      x_val = as.integer(x_value),
-      y_val = as.integer(y_value),
-      label_samples = as.logical(label_samples_logical),
-      drop_assays = as.logical(drop_assays_logical),
-      drop_samples = as.logical(drop_samples_logical),
-      byPanel = as.logical(byPanel_logical),
-      outlierDefX = as.numeric(outlierDefX_val),
-      outlierDefY = as.numeric(outlierDefY_val),
-      outlierLines = as.logical(outlierLines_logical),
-      label_outliers = as.logical(label_outliers_logical),
-      quiet =TRUE
-    )
-    
-  }  
-  
-  if(method2use == "olink_pca_plot"){
-    plot_out <- OlinkAnalyze::olink_pca_plot(
-      df = df,
+      df = df2check4outlier,
       color_g = as.character(color),
       x_val = as.integer(x_value),
       y_val = as.integer(y_value),
@@ -908,12 +889,33 @@ outlier_detection_plot <- function(
       quiet = TRUE
     )
     
+    plot_out <- patchwork::wrap_plots(plot_out) + plot_layout(guides = "collect")
+    
+  }  
+  
+  if(method2use == "olink_pca_plot"){
+    plot_out <- OlinkAnalyze::olink_pca_plot(
+      df = df2check4outlier,
+      color_g = as.character(color),
+      x_val = as.integer(x_value),
+      y_val = as.integer(y_value),
+      label_samples = as.logical(label_samples_logical),
+      drop_assays = as.logical(drop_assays_logical),
+      drop_samples = as.logical(drop_samples_logical),
+      byPanel = as.logical(byPanel_logical),
+      outlierDefX = as.numeric(outlierDefX_val),
+      outlierDefY = as.numeric(outlierDefY_val),
+      outlierLines = as.logical(outlierLines_logical),
+      label_outliers = as.logical(label_outliers_logical),
+      quiet = TRUE
+    )
+    plot_out <- patchwork::wrap_plots(plot_out) + plot_layout(guides = "collect")
 
   }  
       
   if(method2use == "olink_qc_plot"){
     plot_out <- OlinkAnalyze::olink_qc_plot(
-      df = df,
+      df = df2check4outlier,
       color_g = !!sym(color),
       plot_index = FALSE,
       label_outliers = as.logical(label_outliers_logical),
@@ -927,28 +929,19 @@ outlier_detection_plot <- function(
   
   if(method2use %in% c("olink_pca_plot", "olink_umap_plot")){
     if (is.list(plot_out)) {
-      for(p in seq(1,length(plot_out))){
-        if(p==1){
-          p_out_table <- plot_out[[p]]$data %>% dplyr::filter(Outlier==1)
-        } else {
-          if(nrow(p_out_table) == 0){
-            p_out_table <- plot_out[[p]]$data %>% dplyr::filter(Outlier==1)
-          } else {
-            p_out_table <- rbind(p_out_table,plot_out[[p]]$data %>% dplyr::filter(Outlier==1))
-          }
+      p_out_table <- data.frame()
+      for (p in seq(1, length(plot_out))) {
+        curr_outlier_table <- plot_out[[p]]$data %>% dplyr::filter(Outlier == 1)
+        if (nrow(curr_outlier_table) > 0) {
+          p_out_table <- rbind(p_out_table, curr_outlier_table)
         }
       }
-      
-  }
-    
-  plot_out <- patchwork::wrap_plots(plot_out, nrow = facetNrow_val, ncol = facetNcol_val)
-  
+    }
   } else {
-    
     p_out_table <- plot_out$data %>% dplyr::filter(Outlier==1)
   }
   
-  if((panel != "all") & (!("Panel" %in% names(p_out_table)))){
+  if((panel != "all") && (!("Panel" %in% names(p_out_table)))){
     p_out_table["Panel"] <- panel
   }
   

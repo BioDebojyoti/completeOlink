@@ -24,6 +24,7 @@ list_of_packages1 <- c(
   "patchwork"
 )
 
+
 for(pkg1 in list_of_packages1){
   library(pkg1, character.only = TRUE)
 }
@@ -77,7 +78,8 @@ server <- function(input, output, session) {
                      tabPanel("Data table: meta", DT::dataTableOutput("meta_uploaded")),
                      tabPanel("Data table: complete", DT::dataTableOutput("full_uploaded")),
                      tabPanel("Data table: panel metrics", DT::dataTableOutput("panel_metrics")),
-                     tabPanel("Data table: group-wise panel metrics", DT::dataTableOutput("group_panel_metrics"))
+                     tabPanel("Data table: group-wise panel metrics", DT::dataTableOutput("group_panel_metrics")),                     
+                     tabPanel("About/ Citation", uiOutput("citation_text")),
                    )
                  )
                )),
@@ -297,7 +299,7 @@ server <- function(input, output, session) {
                      tabPanel("Pathway Enrichment Log", uiOutput("pathway_enrichment_log")),
                      tabPanel("Documentation/ Help", htmlOutput("pathway_enrichment_help")),
                      tabPanel("Pathway Enrichment Plot", plotOutput("pathway_visual_plot")),
-                     tabPanel("Pathway Enrichment Plot log", uiOutput("pathway_visual_log")),
+                     # tabPanel("Pathway Enrichment Plot log", uiOutput("pathway_visual_log")),
                      tabPanel("Plot Documentation/ Help", htmlOutput("pathway_visual_help"))
                    )
                    )
@@ -332,7 +334,8 @@ server <- function(input, output, session) {
                                 style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;",
                                 plotOutput("statistical_test_boxplot_out", height = "800px", width = "800px")
                               )
-                     )
+                     ),
+                     tabPanel("Documentation/ Help", htmlOutput("boxplot_help"))
                    )
                  )
                )
@@ -385,6 +388,34 @@ server <- function(input, output, session) {
       easyClose = TRUE,
       footer = modalButton("Close")
     ))
+  })
+  
+  output$citation_text <- renderUI({
+    HTML("
+      <p><strong>This shiny app is based on the OlinkAnalyze R package 4.0.1.</strong> Please cite the original work (latest version at the time of release of this app) if you use this application for your research work.</p>
+      
+      <hr>
+
+      <h4>Citation:</h4>
+      <p>To cite package <em>OlinkAnalyze</em> in publications use:</p>
+      <p><strong>Nevola K, Sandin M, Guess J, Forsberg S, Cambronero C, Pucholt P, Zhang B, Sheikhi M, Diamanti K, Kar A, Conze L, Chin K, Topouza D (2025).</strong> <em>OlinkAnalyze: Facilitate Analysis of Proteomic Data from Olink</em>. R package version 4.1.2, <a href='https://github.com/olink-proteomics/olinkrpackage' target='_blank'>https://github.com/olink-proteomics/olinkrpackage</a>.</p>
+
+      <hr>
+
+      <h4>BibTeX Entry:</h4>
+      <pre>
+@Manual{,
+  title = {OlinkAnalyze: Facilitate Analysis of Proteomic Data from Olink},
+  author = {Kathleen Nevola and Marianne Sandin and Jamey Guess and
+    Simon Forsberg and Christoffer Cambronero and Pascal Pucholt and
+    Boxi Zhang and Masoumeh Sheikhi and Klev Diamanti and Amrita Kar
+    and Lei Conze and Kristyn Chin and Danai Topouza},
+  year = {2025},
+  note = {R package version 4.1.2},
+  url = {https://github.com/olink-proteomics/olinkrpackage},
+}
+      </pre>
+    ")
   })
   
   # Reactive expression to read the uploaded file
@@ -588,12 +619,12 @@ server <- function(input, output, session) {
   
   output$facetNrow_val_ui <- renderUI({
     req(full_data(), input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot", "olink_qc_plot"))
-    numericInput("facetNrow_val", "rows for panel", value = 1L, min = 1L, max = 10L)
+    numericInput("facetNrow_val", "rows for panel", value = 1, min = 1, max = 10)
   })
   
   output$facetNcol_val_ui <- renderUI({
     req(full_data(), input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot", "olink_qc_plot"))
-    numericInput("facetNcol_val", "columns for panel", value = 2L, min = 1L, max = 10L)
+    numericInput("facetNcol_val", "columns for panel", value = 2, min = 1, max = 10)
   })
 
   observeEvent(input$run_outlier_plot, {})
@@ -634,7 +665,7 @@ server <- function(input, output, session) {
     
     outlier_detection_plot(
       method2use = input$outlier_plot_method,
-      df = full_data(),
+      df2check4outlier = full_data(),
       panel = input$outlier_panel,
       color = input$outlier_color,
       x_value = if(input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot")) input$outlier_x_val else 1L,
@@ -643,8 +674,8 @@ server <- function(input, output, session) {
       drop_assays_logical = if(input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot")) input$drop_assays_logical else FALSE,
       drop_samples_logical = if(input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot")) input$drop_assays_logical else FALSE,
       byPanel_logical = if(input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot")) input$by_panel_logical else FALSE,
-      outlierDefX_val = if(input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot")) input$outlierDefX_val else NA,
-      outlierDefY_val = if(input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot")) input$outlierDefY_val else NA,
+      outlierDefX_val = if(input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot")) input$outlierDefX_val else as.numeric(NA),
+      outlierDefY_val = if(input$outlier_plot_method %in% c("olink_pca_plot", "olink_umap_plot")) input$outlierDefY_val else as.numeric(NA),
       outlierLines_logical = input$outlierLines_logical,
       label_outliers_logical = input$label_outliers_logical,
       IQR_outlierDef_val = if(input$outlier_plot_method %in% c("olink_qc_plot")) input$IQR_outlierDef_val else 3,
@@ -657,7 +688,7 @@ server <- function(input, output, session) {
     output$exploratory_output <- renderPlot({
     req(outlier_detection_plot_output())
       
-    rv_outlier$plot <- outlier_detection_plot_output() 
+    rv_outlier$plot <- outlier_detection_plot_output()[[1]] 
     outlier_detection_plot_output()[[1]]
   })
   
@@ -1342,7 +1373,7 @@ server <- function(input, output, session) {
       test_output(),
       input$stats_panel_col,
       input$test_col,
-      input$posthoc_olinkid_list,
+      # input$posthoc_olinkid_list,
       input$use_filtered_data_logical
     )
     if(as.logical(input$use_filtered_data_logical)){
@@ -1360,6 +1391,12 @@ server <- function(input, output, session) {
       req(input$variable_col, input$dependence_text)
     }
     
+    if(!is.null(input$posthoc_olinkid_list)){
+      list2pass <- input$posthoc_olinkid_list
+    } else {
+      list2pass <- NULL
+    }
+    
     posthoc_statistics(
       df = df,
       posthoc_effect = if (input$test_col %in% c("olink_lmer","olink_anova", "olink_ordinalRegression")) input$posthoc_effect else NULL,
@@ -1367,7 +1404,7 @@ server <- function(input, output, session) {
       panel_col = input$stats_panel_col,
       test_col = input$test_col,
       variable = input$variable_col,
-      olink_list = input$posthoc_olinkid_list,
+      olink_list = list2pass,
       covariate_val = if (input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression")) input$covariate_col else NULL,
       posthoc_model_formula = if (input$test_col %in% c("olink_anova", "olink_lmer")) input$model_formula_text else NULL,
       random_list = if (input$test_col %in% c("olink_lmer")) input$random_effect else NULL,
@@ -1411,7 +1448,7 @@ server <- function(input, output, session) {
   
   
   output$statistical_test_boxplot_variable_ui <- renderUI({
-    req(input$test_col, input$stats_panel_col,input$use_filtered_data_logical)
+    req(input$stats_panel_col,input$use_filtered_data_logical)
     if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data()
@@ -1637,6 +1674,14 @@ server <- function(input, output, session) {
     }
   )
   
+  output$boxplot_help <- renderText({
+    req(input$stats_panel_col, input$boxplot_variable_list, input$use_filtered_data_logical, input$use_test_results)
+    temp = Rd2HTML(Rd_fun("olink_boxplot"),
+                   out = tempfile("docs"))
+    content = read_file(temp)
+    file.remove(temp)
+    content
+  })
 
   output$posthoc_test_help <- renderText({
     req(!(input$test_col %in% c("olink_ttest", "olink_wilcox")), test_output())
@@ -2153,6 +2198,12 @@ server <- function(input, output, session) {
   
 }
 
-options(shiny.port = 9999)
+# options(
+#   shiny.port = 3838, 
+#   shiny.host = "0.0.0.0", 
+#   shiny.launch.browser = FALSE, 
+#   shiny.fileUpload.directory = "/srv/shiny-server/tmp"
+# ) 
+
 shiny::shinyApp(ui = ui, server = server)
 
