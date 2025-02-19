@@ -271,15 +271,15 @@ qq_ploter <- function(data_to_use, panel, assay){
       ggplot2::theme_minimal(base_size = 15) +
       ggplot2::theme(
         plot.title = element_text(
-          size = 24,             # Title font size
-          face = "bold",         # Bold title
-          hjust = 0.5,           # Center align title
-          margin = margin(b = 20) # Add space below title
+          size = 24,             
+          face = "bold",         
+          hjust = 0.5,           
+          margin = margin(b = 20) 
         ),
         axis.title = element_text(size = 16),
         axis.text.x = element_text(color = "#000000", size = 14),
         axis.text.y = element_text(color = "#000000", size = 14),
-        plot.margin = margin(t = 20, r = 20, b = 20, l = 20) # Add space around plot
+        plot.margin = margin(t = 20, r = 20, b = 20, l = 20) 
       )
   )
 }
@@ -311,9 +311,9 @@ npxCheck <- function(df) {
   }
   
   # Check for duplicates in SampleID ----
+  
   duplicate_ids <- df |>
-    dplyr::select(SampleID,
-                  OlinkID) |>
+    dplyr::select(SampleID, OlinkID) |>
     duplicated()
   
   # Check if any duplicates are found
@@ -415,7 +415,7 @@ statistical_test <- function(
   subject_val = NULL,
   return_covariates = FALSE  
 ){
-  print(test_col)
+  
   
   if(panel_col != "all"){
     df <- df %>% dplyr::filter(Panel == panel_col)
@@ -426,6 +426,10 @@ statistical_test <- function(
     dplyr::filter(!(grepl("control|ctrl", Assay, ignore.case = TRUE)))
   
   if(test_col == "olink_ttest"){
+    
+    levels_variable <- levels(factor(df[[variable]]))
+    df[[variable]] <- factor(df[[variable]], levels = rev(levels_variable))
+    
     if(is.null(pair_id_val) || pair_id_val == "null"){
       verbose_msg <- capture.output(
       out <- OlinkAnalyze::olink_ttest(df, variable),
@@ -440,6 +444,10 @@ statistical_test <- function(
   }
     
   if(test_col == "olink_wilcox"){
+    
+    levels_variable <- levels(factor(df[[variable]]))
+    df[[variable]] <- factor(df[[variable]], levels = rev(levels_variable))
+    
     if(is.null(pair_id_val) || pair_id_val == "null"){
       verbose_msg <- capture.output(
       out <- OlinkAnalyze::olink_wilcox(df, variable),
@@ -613,6 +621,79 @@ statistical_test_plot <- function(test_result, variable, method2use){
   return(test_volcano)
 }
 
+######
+
+modified_olink_volcano_plot <- function(p.val_tbl, 
+                                        x_lab = "Estimate", 
+                                        pval_col = "Adjusted_pval",
+                                        olinkid_list = NULL, 
+                                        pval_cutoff = 0.05,
+                                        ...) 
+{
+  p.val_tbl <- p.val_tbl %>%
+    dplyr::mutate(
+      Threshold = ifelse(
+        !!sym(pval_col) < as.numeric(pval_cutoff), 
+        "Significant", "Non-significant")
+    ) %>% 
+    as.data.frame() %>%
+    dplyr::mutate(across(where(is.numeric), ~ round(., 3))) %>%
+      dplyr::mutate(
+        Threshold = ifelse(
+          Threshold == "Non-significant",
+          "Non-significant",
+          ifelse(estimate <0, "Down", "Up"))
+      )
+  # Define colors
+  color_palette <- c(
+    "Non-significant" = "#898989",
+    "Up" = "#ff3232",
+    "Down" = "#0021f3"
+    # "Significant" = "#99ff99"
+  )
+  
+  if (length(list(...)) > 0) {
+    ellipsis_variables <- names(list(...))
+    if (length(ellipsis_variables) == 1) {
+      if (!(ellipsis_variables == "coloroption")) {
+        stop(paste0("The ... option only takes the coloroption argument. ... currently contains the variable ", 
+                    ellipsis_variables, "."))
+      }
+    }
+    else {
+      stop(paste0("The ... option only takes one argument. ... currently contains the variables ", 
+                  paste(ellipsis_variables, collapse = ", "), "."))
+    }
+  }
+  if (is.null(olinkid_list)) {
+    olinkid_list <- p.val_tbl %>% 
+      dplyr::filter(!!sym(pval_col) < pval_cutoff) %>% 
+      dplyr::pull(OlinkID)
+  }
+  
+  plot_min <- min( p.val_tbl$estimate, na.rm = TRUE)
+  plot_max <- max( p.val_tbl$estimate, na.rm = TRUE)
+  plot_limits <- abs(max(abs(plot_min),plot_max))
+  
+  volcano_plot <- p.val_tbl %>%
+    ggplot2::ggplot(ggplot2::aes(x = estimate, y = -log10(!!sym(pval_col)), color = Threshold)) + 
+    ggplot2::geom_point() + 
+    ggplot2::labs(x = x_lab, y = "-log10(p-value)") + 
+    ggplot2::xlim(-plot_limits,plot_limits) +
+    ggrepel::geom_label_repel(
+      data = subset(p.val_tbl, OlinkID %in% olinkid_list),
+      ggplot2::aes(label = Assay, color = Threshold),
+      max.overlaps=nrow(subset(p.val_tbl, OlinkID %in% olinkid_list)),
+      box.padding = 1,
+      show.legend = FALSE) + 
+    ggplot2::geom_hline(yintercept = -log10(pval_cutoff), linetype = "dotted") + 
+    OlinkAnalyze::set_plot_theme() +
+    ggplot2::scale_color_manual(values = color_palette, drop = FALSE)
+  
+  return(volcano_plot)
+}
+
+######
 
 posthoc_statistics <- function(
   df,
@@ -893,6 +974,8 @@ outlier_detection_plot <- function(
     
   }  
   
+  # print(str(df2check4outlier))
+  
   if(method2use == "olink_pca_plot"){
     plot_out <- OlinkAnalyze::olink_pca_plot(
       df = df2check4outlier,
@@ -966,3 +1049,88 @@ clean_yticks <- function(p, m){
 }
 
 
+
+generate_complex_heatmap <- function(
+    data, 
+    group = "Treatment", 
+    panel = "Olink Inflammation", 
+    scale_rows = TRUE, 
+    cluster_rows = TRUE,
+    cluster_columns = FALSE,
+    show_row_names = TRUE,
+    show_column_names = FALSE,
+    color_palette = c("#2166ac", "white", "#b2182b")) {
+ 
+  data <- data %>%
+    dplyr::filter(Panel == panel) %>%
+    dplyr::select(-Panel) %>%
+    as.data.frame() %>% 
+    dplyr::filter(!grepl("control|ctrl",SampleID, ignore.case = TRUE))  %>%
+    dplyr::arrange(!!sym(group))
+  
+  
+  levels_of_group <- levels(factor(data[[group]]))
+  data[[group]] <- factor(data[[group]])
+
+  if (!all(c("SampleID", "Assay", group, "NPX") %in% colnames(data))) {
+    stop("Data must contain 'SampleID', 'Assay', and 'NPX'",group," columns.")
+  }
+  
+
+  
+  # Pivot data into wide format (genes as rows, samples as columns)
+  heatmap_data <- data %>%
+    dplyr::select(SampleID, Assay, NPX) %>%
+    tidyr::pivot_wider(names_from = SampleID, values_from = NPX) %>%
+    as.data.frame()
+  
+  row.names(heatmap_data) <- heatmap_data[["Assay"]]
+  
+  heatmap_data <- heatmap_data %>%
+    dplyr::select(-Assay)
+  
+  # Extract sample groups for annotation
+  sample_groups <- data %>%
+    dplyr::distinct(SampleID, !!sym(group)) %>%
+    dplyr::arrange(!!sym(group))
+
+  
+  # Convert to matrix
+  mat <- as.matrix(heatmap_data%>% na.omit())
+  
+  # Scale rows if specified
+  if (scale_rows) {
+    mat <- t(scale(t(mat)))
+  }
+  
+  heatmap_colors <- circlize::colorRamp2(
+    c(min(mat, na.rm = TRUE), 0, max(mat, na.rm = TRUE)),
+    color_palette)
+  
+  # Define color function
+  group_levels <- levels_of_group
+  group_colors <- setNames(
+    RColorBrewer::brewer.pal(max(3,length(group_levels)), "Set2")[seq_len(length(group_levels))],
+    group_levels
+  )
+
+  
+  col_anno <- HeatmapAnnotation(
+    group = sample_groups[[group]],
+    name = group,
+    col = list(group = group_colors),
+    annotation_name_side = "left"
+    )
+    
+  # Generate heatmap
+  Heatmap(
+    mat,
+    name = "NPX",
+    cluster_rows = cluster_rows,
+    cluster_columns = cluster_columns,
+    show_row_names = show_row_names,
+    show_column_names = show_column_names,
+    col = heatmap_colors,
+    top_annotation = col_anno
+  )
+}
