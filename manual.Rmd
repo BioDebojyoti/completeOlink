@@ -1,0 +1,154 @@
+---
+title: "completeOlink - Manual"
+author: 
+date:
+output:
+  pdf_document: default
+  html_document: default
+header-includes: 
+  \usepackage{subcaption}
+  \usepackage{graphicx}
+  \graphicspath{ {./figures/} }
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo=FALSE,
+  fig.show='hold',
+  fig.align='center',
+  dpi = 300
+  )
+```
+
+
+```{r load_packages, echo=FALSE, eval=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readxl)
+```
+
+Here is an easy, step-wise guide to the use of completeOlink webserver for **OLINK** proteomics data analysis
+
+A. Data upload:
+
+\begin{figure}[h]
+  \centering
+    \subcaptionbox{Demo data upload}
+    [0.85\textwidth]{\includegraphics[]{fig3.png}}
+    ~
+    \subcaptionbox{User data upload}
+    [0.85\textwidth]{\includegraphics[]{fig4.png}}
+    \caption{Olink View tab \label{fig1}}
+\end{figure} 
+
+The **Olink View** tab allows data upload. User can optionally use the demo data by selecting **"Yes"** for "Use demo data". Figure \ref{fig1} depicts both scenarios.  
+
+User needs to upload the csv file (the CSV file is characterized by the presence of “;” as a delimiter instead of comma) and a sample manifest file (regular CSV file) where information about each unique “SampleID” in the npx raw data file is available. SampleID (s) are required to be character strings.
+
+\begin{figure}[h]
+  \centering
+    \subcaptionbox{method: olink\_qc\_plot}
+    [0.85\textwidth]{\includegraphics[]{fig5.png}}
+    ~
+    \subcaptionbox{method: olink\_pca\_plot}
+    [0.85\textwidth]{\includegraphics[]{fig6.png}}
+    \caption{Outlier Detection tab (demo data; color: Treatment\label{fig2})}
+\end{figure} 
+
+ 
+ 
+B. Outlier detection: 
+Three outlier detection methods are available with control over parameters (optional) for accurate detection. The user can choose any of the three methods to find outliers or this step can be entirely skipped. See Figure \ref{fig2}. Note: If this step is used the outliers that are found in the most recent run/execution, are propagated to the next analysis step. Although, the user can choose to use the original data instead of the filtered data at every subsequent step. Results of **olink\_umap\_plot** can change in each run because of the inherent stochasticity of UMAP method. 
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[]{fig7.png}
+  \caption{Filter Data tab (demo data) \label{fig3}}
+\end{figure} 
+
+
+C. Filter Data: 
+While the filtering step is optional, the user has the choice of removing samples (outliers from outlier detection step B) as well as assays (having non-parametric or non-standard distribution) before further analysis. See Figure \ref{fig3}. Qualitative feature of each assay is captured using quartile-quartile plot, a standard way to detect if there are departures from normal distribution (non-parametric distribution).
+
+\begin{figure}[h]
+  \centering
+    \subcaptionbox{t-test result}
+    [0.85\textwidth]{\includegraphics[]{fig8.png}}
+    ~
+    \subcaptionbox{t-test plot}
+    [0.85\textwidth]{\includegraphics[]{fig9.png}}
+    \caption{Statistics tab (two-level variable)\label{fig4}}
+\end{figure}
+
+
+
+
+
+D. Statistics:
+Statistical analysis methods offered in the application can be broadly grouped as “parametric” and “non-parametric” statistics.  Parametric statistical tests can be further grouped as tests where “Outcome factor with exactly two levels” and “Outcome factor with greater than two levels”. The former comprises of t-test (olink_ttest) [See Figure \ref{fig4}.] whereas the latter includes analysis of variance (anova; olink_anova)[See Figure \ref{fig5}.]  and linear mixed effects model (lmer; olink_lmer). 
+
+
+\begin{figure}[b]
+  \centering
+    \subcaptionbox{ANOVA result}
+    [0.85\textwidth]{\includegraphics[]{fig10.png}}
+    ~
+    \subcaptionbox{ANOVA plot}
+    [0.85\textwidth]{\includegraphics[]{fig11.png}}
+    \caption{Statistics tab (\textgreater  two-level variable)\label{fig5}}
+\end{figure}
+
+
+
+
+
+
+
+The corresponding “non-parametric” test for “Outcome factor with exactly two levels” is the Mann-Whitney U test (olink_wilcox), while for “Outcome factor with greater than two levels” the tests are Kruskal-Wallis test/ Friedman test (olink_one_non_parametric) and two-way ordinal analysis of variance (olink_ordinalRegression).  Both olink_ttest and olink_wilcox results can be used to generate volcano plots corresponding to the test outcome. 
+In addition to statistical tests, this section allows user to generate heatmaps for a choice of grouping variable. Clustering can be invoked both on rows and/or columns, and the user can choose to use only significant assays obtained in the most recently run/executed statistical test.
+
+
+E. Post-hoc Statistics:
+All statistical tests in the group “Outcome factor with greater than two levels”[See Figure \ref{fig6}] irrespective of distribution, require post hoc analysis before meaningful results are generated. All active (chosen) functions have their corresponding usage information available in a tab labelled “Documentation/ Help”. 
+
+F. Pathway Enrichment:
+Following t-test or Mann-Whitney U test or the appropriate post-hoc analysis, the user has the option of performing pathway enrichment using over-representation analysis (ORA) or gene set enrichment analysis (GSEA)[See Figure \ref{fig7}]. 
+
+
+
+\begin{figure}[h!]
+  \centering
+    \subcaptionbox{different effect \& filter term}
+    [0.85\textwidth]{\includegraphics[]{fig13.png}}
+    ~
+    \subcaptionbox{same effect \& filter term}
+    [0.85\textwidth]{\includegraphics[]{fig14.png}}
+    \caption{Post-hoc Statistics tab (\textgreater  two-level variable)\label{fig6}}
+\end{figure}
+
+
+\begin{figure}[htb!]
+  \centering
+    \subcaptionbox{Gene Set Enrichment Results}
+    [0.85\textwidth]{\includegraphics[]{fig15.png}}
+    ~
+    \subcaptionbox{Gene Set Enrichment Heatmap}
+    [0.85\textwidth]{\includegraphics[]{fig16.png}}
+    \caption{Pathway Enrichment tab (demo data t-test results)\label{fig7}}
+\end{figure}
+
+
+G. Additional Visualization:
+Lastly, significant assays can be visualized using boxplots and the p-value significance added to the plot in case t-test were previously performed. Download handlers have been implemented for easy download of all result tables. Figures generated during analysis can be customized for size and downloaded in three file formats. 
+
+
+\begin{figure}[htb!]
+  \centering
+    \subcaptionbox{Boxplot with t-test results}
+    [0.85\textwidth]{\includegraphics[]{fig17.png}}
+    ~
+    \subcaptionbox{Boxplot with ANOVA results}
+    [0.85\textwidth]{\includegraphics[]{fig18.png}}
+    \caption{Additional Visualization tab (demo data)\label{fig7}}
+\end{figure}
