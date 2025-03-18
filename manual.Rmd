@@ -63,15 +63,21 @@ Three outlier detection methods are available with control over parameters (opti
 
 \begin{figure}[h]
   \centering
-  \includegraphics[]{fig7.png}
+    \subcaptionbox{assay qq plot}
+    [0.85\textwidth]{\includegraphics[]{fig7.png}}
+    ~  
+    \subcaptionbox{sample filtered data}    
+    [0.85\textwidth]{\includegraphics[]{fig19.png}}
   \caption{Filter Data tab (demo data) \label{fig3}}
 \end{figure} 
 
 
 C. Filter Data: 
-While the filtering step is optional, the user has the choice of removing samples (outliers from outlier detection step B) as well as assays (having non-parametric or non-standard distribution) before further analysis. See Figure \ref{fig3}. Qualitative feature of each assay is captured using quartile-quartile plot, a standard way to detect if there are departures from normal distribution (non-parametric distribution).
 
-\begin{figure}[h]
+
+While the filtering step is optional, the user has the choice of removing samples (outliers from outlier detection step B) as well as assays (having non-parametric or non-standard distribution) before further analysis. See Figure \ref{fig3}. Qualitative feature of each assay is captured using quantile-quantile plot, a standard way to detect if there are departures from normal distribution (non-parametric distribution).
+
+\begin{figure}[h!]
   \centering
     \subcaptionbox{t-test result}
     [0.85\textwidth]{\includegraphics[]{fig8.png}}
@@ -83,13 +89,15 @@ While the filtering step is optional, the user has the choice of removing sample
 
 
 
-
+\pagebreak
 
 D. Statistics:
+
+
 Statistical analysis methods offered in the application can be broadly grouped as “parametric” and “non-parametric” statistics.  Parametric statistical tests can be further grouped as tests where “Outcome factor with exactly two levels” and “Outcome factor with greater than two levels”. The former comprises of t-test (olink_ttest) [See Figure \ref{fig4}.] whereas the latter includes analysis of variance (anova; olink_anova)[See Figure \ref{fig5}.]  and linear mixed effects model (lmer; olink_lmer). 
 
 
-\begin{figure}[b]
+\begin{figure}[h!]
   \centering
     \subcaptionbox{ANOVA result}
     [0.85\textwidth]{\includegraphics[]{fig10.png}}
@@ -100,21 +108,13 @@ Statistical analysis methods offered in the application can be broadly grouped a
 \end{figure}
 
 
-
-
-
-
-
 The corresponding “non-parametric” test for “Outcome factor with exactly two levels” is the Mann-Whitney U test (olink_wilcox), while for “Outcome factor with greater than two levels” the tests are Kruskal-Wallis test/ Friedman test (olink_one_non_parametric) and two-way ordinal analysis of variance (olink_ordinalRegression).  Both olink_ttest and olink_wilcox results can be used to generate volcano plots corresponding to the test outcome. 
 In addition to statistical tests, this section allows user to generate heatmaps for a choice of grouping variable. Clustering can be invoked both on rows and/or columns, and the user can choose to use only significant assays obtained in the most recently run/executed statistical test.
 
+\pagebreak
 
 E. Post-hoc Statistics:
 All statistical tests in the group “Outcome factor with greater than two levels”[See Figure \ref{fig6}] irrespective of distribution, require post hoc analysis before meaningful results are generated. All active (chosen) functions have their corresponding usage information available in a tab labelled “Documentation/ Help”. 
-
-F. Pathway Enrichment:
-Following t-test or Mann-Whitney U test or the appropriate post-hoc analysis, the user has the option of performing pathway enrichment using over-representation analysis (ORA) or gene set enrichment analysis (GSEA)[See Figure \ref{fig7}]. 
-
 
 
 \begin{figure}[h!]
@@ -127,8 +127,12 @@ Following t-test or Mann-Whitney U test or the appropriate post-hoc analysis, th
     \caption{Post-hoc Statistics tab (\textgreater  two-level variable)\label{fig6}}
 \end{figure}
 
+\pagebreak
 
-\begin{figure}[htb!]
+F. Pathway Enrichment:
+Following t-test or Mann-Whitney U test or the appropriate post-hoc analysis, the user has the option of performing pathway enrichment using over-representation analysis (ORA) or gene set enrichment analysis (GSEA)[See Figure \ref{fig7}]. 
+
+\begin{figure}[h!]
   \centering
     \subcaptionbox{Gene Set Enrichment Results}
     [0.85\textwidth]{\includegraphics[]{fig15.png}}
@@ -138,12 +142,13 @@ Following t-test or Mann-Whitney U test or the appropriate post-hoc analysis, th
     \caption{Pathway Enrichment tab (demo data t-test results)\label{fig7}}
 \end{figure}
 
+\pagebreak
 
 G. Additional Visualization:
 Lastly, significant assays can be visualized using boxplots and the p-value significance added to the plot in case t-test were previously performed. Download handlers have been implemented for easy download of all result tables. Figures generated during analysis can be customized for size and downloaded in three file formats. 
 
 
-\begin{figure}[htb!]
+\begin{figure}[h!]
   \centering
     \subcaptionbox{Boxplot with t-test results}
     [0.85\textwidth]{\includegraphics[]{fig17.png}}
