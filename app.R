@@ -36,6 +36,27 @@ source("R/functions.R")
 
 options(shiny.maxRequestSize=160*1024^2)
 
+# Function to generate a customizable documentation panel
+docPanel <- function(id, help_output, text_label = "?", color = "#007BFF", position = "top") {
+  # Convert position to CSS `top` value
+  top_css <- switch(position,
+                    "top" = "7.5%",
+                    "middle" = "12.5%",
+                    "bottom" = "17.5%",
+                    "50%")  # Default: middle
+  
+  tagList(
+    div(id = paste0("doc-button-", id), text_label, 
+        style = paste0("background-color: ", color, "; top: ", top_css, "; color: black;"),
+        onclick = paste0("toggleDocPanel('doc-panel-", id, "')")),
+    
+    div(id = paste0("doc-panel-", id), class = "doc-panel",
+        actionButton(paste0("close_doc_", id), "Close", style = "float: right;"),
+        div(style = "padding: 10px;", htmlOutput(help_output))
+    )
+  )
+}
+
 ui <- fluidPage(
   uiOutput("olink_data"),
   tags$footer(
@@ -43,7 +64,63 @@ ui <- fluidPage(
       style = "position: fixed; bottom: 0; width: 100%; background-color: #f8f9fa; padding: 10px; text-align: center; border-top: 1px solid #ddd;",
       "© 2025 Debojyoti Das Bioinformactics Unit, Core Facility & Clinical Genomics Linköping, Linköping University"
     )
-  )
+  ),
+  
+  # CSS for Styling
+  tags$head(
+    tags$style(HTML("
+      .doc-panel {
+        position: fixed;
+        top: 0;
+        right: -100vw;
+        width: 84vw;
+        height: 100vh;
+        background-color: rgba(255,255,255,0.95);
+        box-shadow: -2px 0px 10px rgba(0,0,0,0.3);
+        transition: right 0.4s ease-in-out;
+        padding: 20px;
+        z-index: 1000;
+        overflow-y: auto;
+        max-height: 100vh;
+      }
+      .doc-panel.open {
+        right: 0;
+      }
+      [id^='doc-button-'] {
+        position: fixed;
+        right: 0;
+        width: 50px;
+        height: 40px;
+        color: white;
+        border-radius: 10px 0 0 10px;
+        text-align: center;
+        line-height: 40px;
+        font-size: 12px;
+        cursor: pointer;
+        z-index: 1001;
+        overflow: hidden;
+        padding: 0; 
+        box-sizing: border-box; 
+      }
+    "))
+  ),
+  
+  # JavaScript for Toggle and Close Button (FIXED)
+  tags$script(HTML("
+    function toggleDocPanel(panelId) {
+      var panel = document.getElementById(panelId);
+      panel.classList.toggle('open');
+      
+      setTimeout(function() {
+        document.querySelectorAll(\"[id^='close_doc_']\").forEach(function(button) {
+          button.onclick = function() {
+            panel.classList.remove('open');
+          };
+        });
+      }, 200);
+    }
+  "))
+  
 )
 
 
@@ -90,68 +167,77 @@ server <- function(input, output, session) {
                      tabPanel("Data table: meta", DT::dataTableOutput("meta_uploaded")),
                      tabPanel("Data table: complete", DT::dataTableOutput("full_uploaded")),
                      tabPanel("Data table: panel metrics", DT::dataTableOutput("panel_metrics")),
-                     tabPanel("Data table: group-wise panel metrics", DT::dataTableOutput("group_panel_metrics")),                     
-                     tabPanel("About/ Citation", uiOutput("citation_text")),
+                     tabPanel("Data table: group-wise panel metrics", DT::dataTableOutput("group_panel_metrics"))
                    )
                  )
                )),
-               tabPanel("Outlier Detection", fluidPage(
-                 page_sidebar(
-                   "",
-                   sidebar = sidebar(
-                     div(style = "overflow-y: auto; max-height: 90vh;", 
-                         bsCollapse(id = "sidebar_collapse_tab2", open = c("Detection Method", "Method-specific options"), multiple = TRUE,
-                                    bsCollapsePanel("Detection Method", style = "primary",
-                                                    uiOutput("plot_method_col_ui"),
-                                                   uiOutput("outlier_color_ui"),
-                                                   uiOutput("outlier_panel_ui"),
-                                                   uiOutput("run_plot_ui"),                                   
-                                                   uiOutput("run_plot_msg_ui")
-                     ),
-                     bsCollapsePanel("Method-specific options", style = "success",
-                                     uiOutput("by_panel_logical_ui"),
-                                     uiOutput("outlierLines_logical_ui"),
-                                     uiOutput("label_samples_logical_ui"),
-                                     uiOutput("label_outliers_logical_ui"),
-                                     uiOutput("drop_assays_logical_ui"),
-                                     uiOutput("drop_sample_logical_ui"),
-                                     uiOutput("outlier_x_val_ui"),
-                                     uiOutput("outlier_y_val_ui"),
-                                     uiOutput("outlierDefX_val_ui"),
-                                     uiOutput("outlierDefY_val_ui"),
-                                     uiOutput("IQR_outlierDef_val_ui"),
-                                     uiOutput("median_outlierDef_val_ui"),
-                                     uiOutput("facetNrow_val_ui"),
-                                     uiOutput("facetNcol_val_ui")
-                     ),
-                     bsCollapsePanel("Download options", style = "danger",
-                                     uiOutput("run_plot_msg_ui"),
-                                     uiOutput("download_options_outlier_ui"),
-                                     uiOutput("download_width_outlier_ui"),
-                                     uiOutput("download_height_outlier_ui"),
-                                     uiOutput("download_type_outlier_ui"),
-                                     uiOutput("download_plot_outlier_ui")
-                                    )
+               tabPanel("Outlier Detection",
+                        fluidPage(
+                          page_sidebar(
+                            "",
+                            sidebar = sidebar(
+                              div(style = "overflow-y: auto; max-height: 90vh;", 
+                                  bsCollapse(id = "sidebar_collapse_tab2", open = c("Detection Method", "Method-specific options"), multiple = TRUE,
+                                             bsCollapsePanel("Detection Method", style = "primary",
+                                                             uiOutput("plot_method_col_ui"),
+                                                             uiOutput("outlier_color_ui"),
+                                                             uiOutput("outlier_panel_ui"),
+                                                             uiOutput("run_plot_ui"),                                   
+                                                             uiOutput("run_plot_msg_ui")
+                                             ),
+                                             bsCollapsePanel("Method-specific options", style = "success",
+                                                             uiOutput("by_panel_logical_ui"),
+                                                             uiOutput("outlierLines_logical_ui"),
+                                                             uiOutput("label_samples_logical_ui"),
+                                                             uiOutput("label_outliers_logical_ui"),
+                                                             uiOutput("drop_assays_logical_ui"),
+                                                             uiOutput("drop_sample_logical_ui"),
+                                                             uiOutput("outlier_x_val_ui"),
+                                                             uiOutput("outlier_y_val_ui"),
+                                                             uiOutput("outlierDefX_val_ui"),
+                                                             uiOutput("outlierDefY_val_ui"),
+                                                             uiOutput("IQR_outlierDef_val_ui"),
+                                                             uiOutput("median_outlierDef_val_ui"),
+                                                             uiOutput("facetNrow_val_ui"),
+                                                             uiOutput("facetNcol_val_ui")
+                                             )
+                                  )
                               )
-                           )
-                   ),
-                   tabsetPanel(
-                     tabPanel("Exploratory View", 
-                              div(
-                                style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;",
-                                plotOutput("exploratory_output", width = "80%", height = "80%")
-                                )
-                              ),             
-                     tabPanel("Outlier Table", DT::dataTableOutput("outlier_table_output")),
-                     tabPanel("Documentation/ Help", htmlOutput("exploratory_help"))
-                   )
-                 )
-               )
+                            ),
+                            tabsetPanel(
+                              tabPanel("Exploratory View", 
+                                       div(
+                                         style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; position: relative;",
+                                         plotOutput("exploratory_output", width = "80%", height = "80%"),
+                                         
+                                         # Download options inside the plot space
+                                         conditionalPanel(
+                                           condition = "output.outlier_plot_ready",  
+                                           absolutePanel(
+                                             bottom = 20, left = 20, style = "background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px; z-index: 10;",
+                                             bsCollapsePanel("Download Options", style = "danger",
+                                                             uiOutput("run_plot_msg_ui"),
+                                                             uiOutput("download_options_outlier_ui"),
+                                                             uiOutput("download_width_outlier_ui"),
+                                                             uiOutput("download_height_outlier_ui"),
+                                                             uiOutput("download_type_outlier_ui"),
+                                                             uiOutput("download_plot_outlier_ui")
+                                            )
+                                           )
+                                         )
+                                       )
+                              ),
+                              tabPanel("Outlier Table", DT::dataTableOutput("outlier_table_output"))
+                            )
+                          )
+                        ),
+                  docPanel("outlier", "exploratory_help", text_label = "Method", color = "#337ab7", position = "top")  # Documentation panel
                ),
                tabPanel("Filter Data", fluidPage(
                  page_sidebar(
                    "",
                    sidebar = sidebar(
+                     div(style = "overflow-y: auto; max-height: 90vh;", 
                          bsCollapse(id = "sidebar_collapse_tab3", open = c("Filter activation"), multiple = TRUE,
                                     bsCollapsePanel("Filter activation", style = "primary",
                                       uiOutput("filter_data_button_ui"),
@@ -163,26 +249,41 @@ server <- function(input, output, session) {
                                       uiOutput("filter_assay_list_ui")
                                    )
                                  )
+                     )
                    ),
                    tabsetPanel(
                      tabPanel("Quantile-Quantile plot", 
                               div(
                                 style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;",
-                                plotOutput("qq_out", width = "80%", height = "80%")
+                                plotOutput("qq_out", width = "80%", height = "80%"),
+                                # Download options inside the plot space
+                                conditionalPanel(
+                                  condition = "output.qq_plot_ready",  
+                                  absolutePanel(
+                                    bottom = 20, left = 20, style = "background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px; z-index: 10;",
+                                    bsCollapsePanel("Download Options", style = "danger",
+                                                    uiOutput("download_options_qq_ui"),
+                                                    uiOutput("download_width_qq_ui"),
+                                                    uiOutput("download_height_qq_ui"),
+                                                    uiOutput("download_type_qq_ui"),
+                                                    uiOutput("download_plot_qq_ui")
+                                    )
+                                  )
+                                )
                                 )
                               ),
-                     tabPanel("Filtered Data", DT::dataTableOutput("filtered_data_table_output")),
-                     tabPanel("Documentation/ Help", htmlOutput("filter_help"))
+                     tabPanel("Filtered Data", DT::dataTableOutput("filtered_data_table_output"))
                    )
                  )
-               )
+               ),
+               docPanel("filter", "filter_help", text_label = "Method", color = "#337ab7", position = "top")  # Documentation panel  
                ),               
                tabPanel("Statistics", fluidPage(
                    page_sidebar(
                      "",
                      sidebar = sidebar(
                        div(style = "overflow-y: auto; max-height: 90vh;", 
-                           bsCollapse(id = "sidebar_collapse_tab4", open = c("Method", "Parameters", "Run"), multiple = TRUE,
+                           bsCollapse(id = "sidebar_collapse_tab4", open = c("Method", "Parameters"), multiple = TRUE,
                                       bsCollapsePanel("Method", style = "primary",
                                                       uiOutput("use_filtered_data_logical_ui"),
                                                       uiOutput("stats_panel_col_ui"),
@@ -232,10 +333,6 @@ server <- function(input, output, session) {
                                                       uiOutput("complex_heatmap_use_rownames_logical_ui"),
                                                       uiOutput("complex_heatmap_use_colnames_logical_ui"),
                                                       uiOutput("complex_heatmap_ui")
-                                      ),
-                                      # Download Options
-                                      bsCollapsePanel("Download Options", style = "danger",
-                                                      uiOutput("stats_download_options_ui")
                                       )
                            )
                        )
@@ -246,27 +343,58 @@ server <- function(input, output, session) {
                        tabPanel("Statistical test plot", 
                                 div(
                                   style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;",
-                                  plotOutput("statistical_test_plot_out", height = "80%", width = "80%")
+                                  plotOutput("statistical_test_plot_out", height = "80%", width = "80%"),
+                                  # Download options inside the plot space
+                                  conditionalPanel(
+                                    condition = "output.stat_plot_ready",  
+                                    absolutePanel(
+                                      bottom = 20, left = 80, style = "background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px; z-index: 10;",
+                                      bsCollapsePanel("Download Options", style = "danger",
+                                                      uiOutput("stats_download_options_ui")
+                                      )
+                                    )
+                                  )
                                 ),
                        ),
                        tabPanel("Statistical test log", uiOutput("test_log")),
-                       tabPanel("Documentation/ Help", htmlOutput("test_help")),
                        tabPanel("Heatmap", 
                                 div(
                                   style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;",
                                   plotOutput("complex_heatmap_output", width = "80%", height = "80%")),
+                                  # Download options inside the plot space
+                                  conditionalPanel(
+                                    condition = "output.complex_heatmap_plot_ready",  
+                                    absolutePanel(
+                                      bottom = 20, left = 80, style = "background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px; z-index: 10;",
+                                      bsCollapsePanel("Download Options", style = "danger",
+                                                      uiOutput("complex_heatmap_download_options_ui")
+                                      )
+                                    )
+                                  )
                                ),
-                       tabPanel("ComplexHeatmap Documentation/ Help", htmlOutput("complex_heatmap_help")),
                        tabPanel("lmer visualization", 
                                   div(
                                     style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;",
-                                    plotOutput("olink_lmer_plot_output", width = "80%", height = "80%")
+                                    plotOutput("olink_lmer_plot_output", width = "80%", height = "80%"),
+                                    # Download options inside the plot space
+                                    conditionalPanel(
+                                      condition = "output.lmer_plot_ready",  
+                                      absolutePanel(
+                                        bottom = 20, left = 80, style = "background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px; z-index: 10;",
+                                        bsCollapsePanel("Download Options", style = "danger",
+                                                        uiOutput("lmer_plot_download_options_ui")
+                                        )
+                                      )
+                                    )
                                     )
                                   )
                          
                      )
                    )
-                 )
+                 ),
+                 docPanel("statistics", "test_help", text_label = "Test", color = "#337ab7", position = "top"),  # Documentation panel  
+                 docPanel("lmer", "lmer_plot_help", text_label = "Plot", color = "#fff49b", position = "middle"),  # Documentation panel  
+                 docPanel("Heatmap", "complex_heatmap_help",  text_label = "Heatmap",color = "#ACE1AF", position = "bottom")  # Documentation panel  
                ),
                tabPanel("Post-hoc Statistics", fluidPage(
                  page_sidebar(
@@ -296,11 +424,11 @@ server <- function(input, output, session) {
                    ),
                    tabsetPanel(
                      tabPanel("Posthoc Statistical test result", DT::dataTableOutput("posthoc_test_result")),
-                     tabPanel("Posthoc Statistical test log", uiOutput("posthoc_test_log")),
-                     tabPanel("Documentation/ Help", htmlOutput("posthoc_test_help"))
+                     tabPanel("Posthoc Statistical test log", uiOutput("posthoc_test_log"))
                    )
                  )
-               )
+               ),      
+               docPanel("posthoc_statistics", "posthoc_test_help", text_label = "Test", color = "#337ab7", position = "top")  # Documentation panel  
                ),
                tabPanel("Pathway Enrichment", fluidPage(
                  page_sidebar(
@@ -322,13 +450,6 @@ server <- function(input, output, session) {
                                                     uiOutput("pathway_visual_keyword_ui"),
                                                     uiOutput("pathway_visual_number_of_terms_ui"),
                                                     uiOutput("pathway_visual_run_ui")
-                                    ),
-                                    bsCollapsePanel("Download options", style = "danger",
-                                                    uiOutput("download_pathway_visual_options_ui"),
-                                                    uiOutput("download_pathway_visual_width_ui"),
-                                                    uiOutput("download_pathway_visual_height_ui"),
-                                                    uiOutput("download_pathway_visual_type_ui"),
-                                                    uiOutput("download_pathway_visual_plot_ui")
                                     )
                                     
                          )
@@ -337,12 +458,31 @@ server <- function(input, output, session) {
                    tabsetPanel(
                      tabPanel("Pathway Enrichment Result", DT::dataTableOutput("pathway_enrichment_result")),
                      tabPanel("Pathway Enrichment Log", uiOutput("pathway_enrichment_log")),
-                     tabPanel("Documentation/ Help", htmlOutput("pathway_enrichment_help")),
-                     tabPanel("Pathway Enrichment Plot", plotOutput("pathway_visual_plot")),
-                     tabPanel("Plot Documentation/ Help", htmlOutput("pathway_visual_help"))
+                     tabPanel("Pathway Enrichment Plot", 
+                              div(
+                                style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;",
+                                plotOutput("pathway_visual_plot", height = "80%", width = "80%"),
+                                # Download options inside the plot space
+                                conditionalPanel(
+                                  condition = "output.pathway_visual_plot_ready",  
+                                  absolutePanel(
+                                    bottom = 20, left = 20, style = "background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px; z-index: 10;",
+                                    bsCollapsePanel("Download options", style = "danger",
+                                                    uiOutput("download_pathway_visual_options_ui"),
+                                                    uiOutput("download_pathway_visual_width_ui"),
+                                                    uiOutput("download_pathway_visual_height_ui"),
+                                                    uiOutput("download_pathway_visual_type_ui"),
+                                                    uiOutput("download_pathway_visual_plot_ui")
+                                    )
+                                  )
+                                )                                
+                              )
+                           )
+                     )
                    )
-                   )
-                 )
+                 ),
+                 docPanel("pathway_enrichment", "pathway_enrichment_help", text_label = "Method", color = "#337ab7", position = "top"),  # Documentation panel  
+                 docPanel("pathway_visual", "pathway_visual_help", text_label = "Plot", color = "#ACE1AF", position = "middle"),  # Documentation panel  
                ),
                tabPanel("Additional Visualization", fluidPage(
                  page_sidebar(
@@ -356,14 +496,7 @@ server <- function(input, output, session) {
                               uiOutput("statistical_test_boxplot_olink_use_test_result_ui"),
                               uiOutput("statistical_test_boxplot_number_ui"), 
                               uiOutput("statistical_test_boxplot_run_ui")
-                         ),
-                        bsCollapsePanel("Download options", style = "danger",                        
-                            uiOutput("download_options_ui"),
-                            uiOutput("download_width_ui"),
-                            uiOutput("download_height_ui"),
-                            uiOutput("download_type_ui"),
-                            uiOutput("download_plot_ui")
-                        )
+                         )
                        )
                       )
                    ),
@@ -371,16 +504,34 @@ server <- function(input, output, session) {
                      tabPanel("Boxplot", 
                               div(
                                 style = "height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;",
-                                plotOutput("statistical_test_boxplot_out", height = "80%", width = "80%")
+                                plotOutput("statistical_test_boxplot_out", height = "80%", width = "80%"),
+                                # Download options inside the plot space
+                                conditionalPanel(
+                                  condition = "output.box_plot_ready",  
+                                  absolutePanel(
+                                    bottom = 20, left = 20, style = "background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px; z-index: 10;",
+                                    bsCollapsePanel("Download options", style = "danger",                        
+                                                    uiOutput("download_options_ui"),
+                                                    uiOutput("download_width_ui"),
+                                                    uiOutput("download_height_ui"),
+                                                    uiOutput("download_type_ui"),
+                                                    uiOutput("download_plot_ui")
+                                    )
+                                  )
+                                )
+                                ####
                               )
                      ),
-                     tabPanel("Documentation/ Help", htmlOutput("boxplot_help"))
                    )
                  )
+               ),
+               docPanel("boxplot", "boxplot_help", text_label = "Boxplot", color = "#337ab7", position = "top"),  # Documentation panel  
+               ),
+               tabPanel("About/ Citation", fluidPage(
+                 uiOutput("citation_text"))
                )
-               )
-    )
-  })
+              )
+            })
   
   # info button
   observeEvent(req(input$info_btn), {
@@ -436,22 +587,32 @@ server <- function(input, output, session) {
       <hr>
 
       <h4>Citation:</h4>
-      <p>To cite package <em>OlinkAnalyze</em> in publications use:</p>
+      <p>To cite <em>completeOlink</em> in publications use:</p>
+      <p><strong> Debojyoti Das (2025). BioDebojyoti/completeOlink: First release (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.15090716.</strong>, <a href='https://github.com/BioDebojyoti/completeOlink' target='_blank'>https://github.com/BioDebojyoti/completeOlink</a>.</p>
+
+      <p>To cite <em>OlinkAnalyze</em> in publications use:</p>
       <p><strong>Nevola K, Sandin M, Guess J, Forsberg S, Cambronero C, Pucholt P, Zhang B, Sheikhi M, Diamanti K, Kar A, Conze L, Chin K, Topouza D (2025).</strong> <em>OlinkAnalyze: Facilitate Analysis of Proteomic Data from Olink</em>. R package version 4.1.2, <a href='https://github.com/olink-proteomics/olinkrpackage' target='_blank'>https://github.com/olink-proteomics/olinkrpackage</a>.</p>
 
       <hr>
 
       <h4>BibTeX Entry:</h4>
       <pre>
-@Manual{,
-  title = {OlinkAnalyze: Facilitate Analysis of Proteomic Data from Olink},
-  author = {Kathleen Nevola and Marianne Sandin and Jamey Guess and
-    Simon Forsberg and Christoffer Cambronero and Pascal Pucholt and
-    Boxi Zhang and Masoumeh Sheikhi and Klev Diamanti and Amrita Kar
-    and Lei Conze and Kristyn Chin and Danai Topouza},
-  year = {2025},
-  note = {R package version 4.1.2},
-  url = {https://github.com/olink-proteomics/olinkrpackage},
+@software{biodebojyoti_2025_15090716,
+  author       = {Debojyoti Das},
+  title        = {BioDebojyoti/completeOlink: First release},
+  month        = mar,
+  year         = 2025,
+  publisher    = {Zenodo},
+  version      = {v1.0.0},
+  doi          = {10.5281/zenodo.15090716},
+  url          = {https://doi.org/10.5281/zenodo.15090716},
+  swhid        = {swh:1:dir:b2f7f5dcfd8350722872a7d13268a2ffc5f6d59f
+                   ;origin=https://doi.org/10.5281/zenodo.15090715;vi
+                   sit=swh:1:snp:77bf99813185139d98e2d73c03e9a1b47edb
+                   4a9e;anchor=swh:1:rel:117b6ace632ebbfd8bef359529bd
+                   e4b55277590f;path=BioDebojyoti-
+                   completeOlink-16f2a67
+                  },
 }
       </pre>
     ")
@@ -569,15 +730,9 @@ server <- function(input, output, session) {
                                     dt.page.len(-1);
                                     dt.ajax.reload();
                                 }")
-        )
+          )
         )
       )
-      # options = list(
-      #   pageLength = 10,
-      #   autoWidth = TRUE,
-      #   filter = 'top' # Enable column filters
-      # ),
-      # filter = 'top'
     )
   }) 
   
@@ -819,6 +974,14 @@ server <- function(input, output, session) {
     outlier_detection_plot_output()[[2]]
   })
   
+  output$outlier_plot_ready <- reactive({
+    !is.null(rv_outlier$plot)  # Returns TRUE if plot exists, FALSE otherwise
+  })
+  
+  # Ensure Shiny knows to use this value dynamically
+  outputOptions(output, "outlier_plot_ready", suspendWhenHidden = FALSE)
+  
+  
   output$outlier_table_output <- DT::renderDataTable({
     req(outlier_table())
     datatable(
@@ -869,7 +1032,7 @@ server <- function(input, output, session) {
   output$download_options_outlier_ui <- renderUI({
     validate(need(is.list(outlier_detection_plot_output()), "Run outlier detection!"))
     validate(need(is.ggplot(outlier_detection_plot_output()[[1]]), "Check input parameters."))
-    h4("Download Options")
+    h4("Download Outlier Plots")
   })
   
   output$download_width_outlier_ui <- renderUI({
@@ -933,7 +1096,8 @@ server <- function(input, output, session) {
   })
 
   output$filter_sample_id_logical_ui <- renderUI({
-    req(full_data(), outlier_table())
+    req(full_data())
+    # req(full_data(), outlier_table())
     radioButtons("filter_sample_id_logical", "Filter SampleID(s)", choices = c(FALSE, TRUE))
   })
   
@@ -958,15 +1122,78 @@ server <- function(input, output, session) {
     
   })
   
-  output$qq_out <- renderPlot({
-    req(full_data(), input$go_qq, input$panel_col,input$curr_assay)
-    qq_ploter(
+  observeEvent(input$go_qq, {})
+  
+  # Reactive values to track the plot
+  rv_qq <- reactiveValues(plot = NULL)
+  
+  qq_out_plot <- reactive({
+    req(full_data(), input$go_qq, input$panel_col, input$curr_assay)
+    qq_plot_out <- qq_ploter(
       full_data(),
       panel = input$panel_col,
       assay = input$curr_assay
     )
+    
+    rv_qq$plot <- qq_plot_out
+    qq_plot_out
+    
+  }) 
+  
+  output$qq_plot_ready <- reactive({
+    !is.null(rv_qq$plot)  # Returns TRUE if plot exists, FALSE otherwise
+  })
+  
+  # Ensure Shiny knows to use this value dynamically
+  outputOptions(output, "qq_plot_ready", suspendWhenHidden = FALSE)
+  
+  output$qq_out <- renderPlot({
+    req(input$go_qq, qq_out_plot())
+    qq_out_plot()
   }) 
 
+  # qq plot download options
+  output$download_options_qq_ui <- renderUI({
+    validate(need(is.ggplot(qq_out_plot()), "Check input parameters."))
+    h4("Download q-q plot")
+  })
+  
+  output$download_width_qq_ui <- renderUI({
+    validate(need(is.ggplot(qq_out_plot()), "Check input parameters."))
+    numericInput("download_width_qq_plot", "Width (inches)", value = 8, min = 1)
+  })
+  
+  output$download_height_qq_ui <- renderUI({
+    validate(need(is.ggplot(qq_out_plot()), "Check input parameters."))
+    numericInput("download_height_qq_plot", "Height (inches)", value = 6, min = 1)
+  })
+  
+  output$download_type_qq_ui <- renderUI({
+    validate(need(is.ggplot(qq_out_plot()), "Check input parameters."))
+    selectInput("download_type_qq_plot", "File Type", choices = c("pdf", "png", "jpg"))
+  })
+  
+  output$download_plot_qq_ui <- renderUI({
+    validate(need(is.ggplot(qq_out_plot()), "Check input parameters."))
+    downloadButton("download_plot_qq_plot", "Download Plot")
+  })  
+  
+  # Download handler for qq plot
+  output$download_plot_qq_plot <- downloadHandler(
+    filename = function() {
+      paste0(tolower(input$curr_assay),"_qq_plot_", Sys.Date(), ".", input$download_type_qq_plot)
+    },
+    content = function(file) {
+      ggsave(
+        filename = file,
+        plot = rv_qq$plot, # Use the stored plot
+        device = input$download_type_qq_plot,
+        width = input$download_width_qq_plot, 
+        height = input$download_height_qq_plot
+      )
+    }
+  )
+  
   # statistical page
   # Generate UI for selecting variable for statistical test
   
@@ -1054,7 +1281,7 @@ server <- function(input, output, session) {
   
   
   column_types <- reactive({
-    req(input$stats_panel_col, input$use_filtered_data_logical)
+    req(input$stats_panel_col, input$use_filtered_data_logical, input$use_demo_data)
     if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data() 
@@ -1079,6 +1306,9 @@ server <- function(input, output, session) {
       nrow(df %>% dplyr::distinct(!!sym(col_name))) == 2
     })]
     # Return valid column names
+    if(as.logical(input$use_demo_data)){
+      valid_columns <- valid_columns[!(valid_columns %in% c("Panel", "Panel_Version", "QC_Warning"))]
+    }
     valid_columns
   })
   
@@ -1251,7 +1481,7 @@ server <- function(input, output, session) {
     if (input$test_col %in% c("olink_ttest", "olink_wilcox")) {
       req(input$variable_col, input$pair_id)  # Pair ID is required for these tests
     } else if (input$test_col %in% c("olink_anova", "olink_lmer")){
-      validate(need(!is.null(input$variable_col) || input$model_formula_text != "", "No inputs provide for model creatation"))
+      validate(need(!is.null(input$variable_col) || input$model_formula_text != "", "No inputs provide for model creation"))
       req(input$return_covariates)
     } else if (input$test_col %in% c("olink_ordinalRegression")){
       req(input$variable_col, input$return_covariates)
@@ -1259,7 +1489,8 @@ server <- function(input, output, session) {
       req(input$variable_col, input$dependence_text)
     }
     
-  
+    withProgress(message = paste0('Running ',input$test_col),
+                 detail = 'This may take a while...', {  
     
     test_result_output <- tryCatch(
       {
@@ -1284,6 +1515,8 @@ server <- function(input, output, session) {
       }
     )
     
+    })
+    
     return(test_result_output)
 
   
@@ -1299,7 +1532,9 @@ server <- function(input, output, session) {
           "Significant", "Non-significant")
       ) %>% 
       as.data.frame() %>%
-      dplyr::mutate(across(where(is.numeric), ~ round(., 3)))
+      dplyr::mutate(
+        across(
+          where(is.numeric)  & !all_of(c("p.value","Adjusted_pval")), ~ round(., 3)))
     
     if(input$test_col %in% c("olink_ttest", "olink_wilcox")){
       dr <- dr %>%
@@ -1391,6 +1626,7 @@ server <- function(input, output, session) {
     } else {
       return(c("p.value"))}
   })
+  
   output$volcano_pval_col_ui <- renderUI({
     req(input$test_col %in% c("olink_ttest", "olink_wilcox"))
     req(test_output(), input$variable_col)
@@ -1407,16 +1643,21 @@ server <- function(input, output, session) {
     selectInput("volcano_olink_specific_list", "Use specific OlinkID(s)", choices = olinks_available, multiple = TRUE)
   })
   
+  observeEvent(input$test_col, {})
+  
+  # Reactive values to track the plot
+  rv_stat <- reactiveValues(plot = NULL)
+  
   statistical_test_plot_output <- reactive({
     req(
       test_output(), 
       input$variable_col, 
-      input$test_col, 
-      input$volcano_olink_specific_logical
+      input$test_col 
     )
     if(input$test_col %in% c("olink_anova", "olink_lmer", "olink_ordinalRegression", "olink_one_non_parametric")){
-      plot_to_return <- plot_ggplot_msg(paste0("Try <span style='color:green;'>", paste0(input$test_col, "_posthoc", collapse = ""),"</span> analysis"))
+      plot_to_return <- plot_ggplot_msg(paste0("Try <span style='color:#B2022F;'>", paste0(input$test_col, "_posthoc", collapse = ""),"</span> analysis"))
     } else {
+      req(input$volcano_olink_specific_logical)
       x_label <- ifelse(input$volcano_alternate_x_label == "", "Estimate", input$volcano_alternate_x_label)
       if(as.logical(input$volcano_olink_specific_logical)){
         req(input$volcano_olink_specific_list)
@@ -1451,9 +1692,19 @@ server <- function(input, output, session) {
         # plot_to_return <- OlinkAnalyze::olink_volcano_plot(test_output()[[1]], x_lab = x_label)
       }
       # plot_to_return$layers[[3]] <- NULL
+      rv_stat$plot <- plot_to_return
     }
     plot_to_return 
   })
+  
+  ##
+  output$stat_plot_ready <- reactive({
+    !is.null(rv_stat$plot)  # Returns TRUE if plot exists, FALSE otherwise
+  })
+  
+  # Ensure Shiny knows to use this value dynamically
+  outputOptions(output, "stat_plot_ready", suspendWhenHidden = FALSE)
+  ##
   
   output$statistical_test_plot_out <- renderPlot({
       req(statistical_test_plot_output())
@@ -1507,6 +1758,20 @@ server <- function(input, output, session) {
   output$test_help <- renderText({
     req(input$test_col)
     temp = Rd2HTML(Rd_fun(input$test_col),out = tempfile("docs"))
+    content = read_file(temp)
+    file.remove(temp)
+    content
+  })
+  
+  output$lmer_plot_help <- renderText({
+    req(full_data())
+    if(input$test_col %in% c("olink_ttest", "olink_wilcox")){
+      temp = Rd2HTML(Rd_fun("olink_volcano_plot"),out = tempfile("docs"))
+    } else if(input$test_col == "olink_lmer"){
+      temp = Rd2HTML(Rd_fun("olink_lmer_plot"),out = tempfile("docs"))
+    } else {
+      return(HTML(paste0("Plot function not available for ", input$test_col)))
+    }
     content = read_file(temp)
     file.remove(temp)
     content
@@ -1637,6 +1902,9 @@ server <- function(input, output, session) {
       list2pass <- NULL
     }
     
+    withProgress(message = paste0('Running ',input$test_col,'_posthoc'),
+                 detail = 'This may take a while...', {  
+    
     tryCatch({
         posthoc_statistics(
           df = df,
@@ -1659,6 +1927,8 @@ server <- function(input, output, session) {
           return(NULL)  # Return NULL to prevent further errors
         }
       )
+                 
+    })
   
   })
   
@@ -1812,7 +2082,7 @@ server <- function(input, output, session) {
   observeEvent(input$generate_boxplot, {})
   
   # Reactive values to track the plot
-  rv <- reactiveValues(plot = NULL)
+  rv_boxplot <- reactiveValues(plot = NULL)
   
   output$statistical_test_boxplot_out <- renderPlot({
     req(input$stats_panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$use_filtered_data_logical, input$use_test_results)
@@ -1873,11 +2143,19 @@ server <- function(input, output, session) {
       ttest_results = ttest_results
     )
     
-    rv$plot <- p[[1]]
+    rv_boxplot$plot <- p[[1]]
     
     p[[1]]
     
   })
+  
+  ##
+  output$boxplot_ready <- reactive({
+    !is.null(rv_boxplot$plot)  # Returns TRUE if plot exists, FALSE otherwise
+  })
+  
+  # Ensure Shiny knows to use this value dynamically
+  outputOptions(output, "boxplot_ready", suspendWhenHidden = FALSE)
   
   output$download_options_ui <- renderUI({
     req(input$test_col, input$stats_panel_col, input$boxplot_variable_list,input$boxplot_olink_list, input$generate_boxplot, input$use_filtered_data_logical)
@@ -1886,7 +2164,7 @@ server <- function(input, output, session) {
     } else {
       req(full_data())
     }
-    h4("Download Options")
+    h4("Download boxplots")
   })
   
   output$download_width_ui <- renderUI({
@@ -1937,7 +2215,7 @@ server <- function(input, output, session) {
     content = function(file) {
       ggsave(
         filename = file,
-        plot = rv$plot, # Use the stored plot
+        plot = rv_boxplot$plot, # Use the stored plot
         device = input$download_type,
         width = input$download_width, 
         height = input$download_height
@@ -1946,7 +2224,7 @@ server <- function(input, output, session) {
   )
   
   output$boxplot_help <- renderText({
-    req(input$stats_panel_col, input$boxplot_variable_list, input$use_filtered_data_logical, input$use_test_results)
+    req(full_data()) 
     temp = Rd2HTML(Rd_fun("olink_boxplot"),
                    out = tempfile("docs"))
     content = read_file(temp)
@@ -1955,23 +2233,32 @@ server <- function(input, output, session) {
   })
 
   output$posthoc_test_help <- renderText({
-    req(!(input$test_col %in% c("olink_ttest", "olink_wilcox")), test_output())
-    temp = Rd2HTML(Rd_fun(paste0(input$test_col,"_posthoc", collapse = "")),
-                   out = tempfile("docs"))
-    content = read_file(temp)
-    file.remove(temp)
-    content
+    req(full_data())
+    # req(!(input$test_col %in% c("olink_ttest", "olink_wilcox")), test_output())
+    if (input$test_col %in% c("olink_ttest", "olink_wilcox")) {
+      return(HTML(
+                  '<h1 style="font-size: 6;"> Posthoc documentation available for the following tests:</h1>
+                    <ul>
+                    <li style="font-size: 10;">anova</li>
+                    <li style="font-size: 10;">lmer</li>
+                    <li style="font-size: 10;">one non-parametric</li>
+                    <li style="font-size: 10;">ordinalRegression</li>
+                  </ul>'
+            )
+         )
+    } else{
+      temp = Rd2HTML(Rd_fun(paste0(input$test_col,"_posthoc", collapse = "")),
+                     out = tempfile("docs"))
+      content = read_file(temp)
+      file.remove(temp)
+      content
+    }
   })
   
   # Pathway Enrichment Page
   output$pathway_enrichment_help <- renderText({
-    req(input$test_col)
-    if(input$test_col %in% c("olink_ttest", "olink_wilcox")){
-      req(test_output())
-    } else {
-      req(posthoc_output())
-    }
-    
+    req(full_data())
+
     temp = Rd2HTML(Rd_fun("olink_pathway_enrichment"),
                    out = tempfile("docs"))
     content = read_file(temp)
@@ -2064,6 +2351,9 @@ server <- function(input, output, session) {
       input$use_filtered_data_logical,
       input$run_pathway_enrichment
     )
+    withProgress(message = 'Running Pathway Enrichment',
+                 detail = 'This may take a while...', {    
+                   
     if(as.logical(input$use_filtered_data_logical)){
       req(filtered_data())
       df <- filtered_data() 
@@ -2093,6 +2383,8 @@ server <- function(input, output, session) {
       dplyr::filter(!grepl("control|ctrl", SampleID, ignore.case = TRUE)) %>% 
       dplyr::filter(!grepl("control|ctrl", Assay, ignore.case = TRUE))
     
+    pathway_enrichment <- NULL  
+    verbose_msg <- NULL  
 
     tryCatch({
             verbose_msg <- capture.output(
@@ -2109,23 +2401,33 @@ server <- function(input, output, session) {
             )
         },
         error = function(e) {
-            showNotification(paste("Error:", e$message), type = "error")
-            return(NULL)  # Return NULL to prevent further errors
+            verbose_msg <- "pathway enrichment failed. Check contrast!!"
+            showNotification(paste(verbose_msg,paste0("Error:", e$message), collapse = "\\n"), type = "error")
+          return(NULL)
           }
         )
   
+    })  # End withProgress
+    
     
     return(list(pathway_enrichment, verbose_msg, test_results))
     
   })
   
   output$pathway_enrichment_result <- DT::renderDataTable({
-    req(input$run_pathway_enrichment, pathway_enrichment_result_output())
+    req(input$run_pathway_enrichment, !is.null(pathway_enrichment_result_output()[[1]]))
+
+
     if(input$test_col == "olink_ttest"){
       caption_out <- paste0("pathway enrichment on ",input$test_col, " results")
     } else {
       caption_out <- paste0("pathway enrichment on ",input$test_col, "_posthoc results")
     }
+    
+    if(nrow(pathway_enrichment_result_output()[[1]]) == 0){
+      caption_out <- paste(caption_out, "No enriched terms found", collapse = "\n")
+    }
+    
     datatable(
       pathway_enrichment_result_output()[[1]] %>% 
         as.data.frame() %>%
@@ -2146,24 +2448,11 @@ server <- function(input, output, session) {
         )
       )
     )  
-    # %>%
-      # formatStyle(
-      #   columns = "Threshold", 
-      #   backgroundColor = styleEqual(
-      #     c("Significant", "Non-significant", "Up", "Down"), 
-      #     c("#99ff99", "#808080","#ff9999", "#99ccff")  
-      #   ),
-      #   # target = "cell",
-      #   fontWeight = "bold"
-      # ) %>%
-      # formatStyle(
-      #   columns = input$result_pval_col, 
-      #   fontWeight = "bold"
-      # )
+
   })
   
   output$pathway_enrichment_log <- renderUI({
-    req(input$run_pathway_enrichment, pathway_enrichment_result_output())
+    req(input$run_pathway_enrichment, !is.null(pathway_enrichment_result_output()[[1]]))
     message_items <- lapply(pathway_enrichment_result_output()[[2]], function(msg) {
       tags$p(msg)
     })
@@ -2171,30 +2460,38 @@ server <- function(input, output, session) {
   })
   
   output$pathway_visual_mode_ui <- renderUI({
-    validate(need(!is.null(pathway_enrichment_result_output()),"No enrichment terms."))
+    req(!is.null(pathway_enrichment_result_output()[[1]]))
     selectInput("pathway_visual_mode", "Select plot type", choices = c("olink_pathway_heatmap", "olink_pathway_visualization"))
   })
   
   output$pathway_visual_help <- renderText({
-    req(input$pathway_visual_mode)
-    temp = Rd2HTML(Rd_fun(input$pathway_visual_mode),out = tempfile("docs"))
+    req(full_data())
+    # Check if input$pathway_visual_mode exists before accessing it
+    pathway_mode <- if (!"pathway_visual_mode" %in% names(input)) {
+      "olink_pathway_heatmap"
+    } else {
+      input$pathway_visual_mode
+    }
+    
+    temp = Rd2HTML(Rd_fun(pathway_mode), out = tempfile("docs"))
     content = read_file(temp)
     file.remove(temp)
     content
   })
   
   output$pathway_visual_keyword_ui <- renderUI({
-    validate(need(!is.null(pathway_enrichment_result_output()),"No enrichment terms."))
+    req(!is.null(pathway_enrichment_result_output()[[1]]))
     textInput("pathway_visual_keyword", "Keyword to filter enrichment results", value = '')
   })
   
   output$pathway_visual_number_of_terms_ui <- renderUI({
-    validate(need(!is.null(pathway_enrichment_result_output()),"No enrichment terms."))
-    numericInput("pathway_visual_number_of_terms", "Number of terms", value = 20, min = 1, max = 100)
+    req(!is.null(pathway_enrichment_result_output()[[1]]))
+    validate(need(!is.null(pathway_enrichment_result_output()[[1]]),"No enrichment terms."))
+    numericInput("pathway_visual_number_of_terms", "Number of terms", value = 20, min = 1, max = 500)
   })
   
   output$pathway_visual_run_ui <- renderUI({
-    validate(need(!is.null(pathway_enrichment_result_output()),"No enrichment terms."))
+    req(!is.null(pathway_enrichment_result_output()[[1]]))
     req(input$pathway_visual_mode, input$pathway_visual_number_of_terms)
     actionButton("pathway_visual_run", "Plot enrichment results")
   })
@@ -2206,11 +2503,11 @@ server <- function(input, output, session) {
   
   pathway_visual_output <- reactive({
     req(
-      pathway_enrichment_result_output(), 
       input$pathway_visual_mode, 
       input$pathway_visual_number_of_terms,
       input$pathway_visual_run
     )
+    req(!is.null(pathway_enrichment_result_output()[[1]]))
     validate(need(nrow(pathway_enrichment_result_output()[[1]])>0, "Enrichment returned empty data.frame"))
     if(input$pathway_visual_mode =="olink_pathway_heatmap"){
       tryCatch({
@@ -2246,8 +2543,19 @@ server <- function(input, output, session) {
     if(is.ggplot(pathway_plot)){
       pathway_plot <- clean_yticks(pathway_plot, input$pathway_visual_mode)
     }
+    
+    rv_pathway_visual$plot <- pathway_plot
+    
     return(list(pathway_plot, verbose_msg))
   })
+  
+  ##
+  output$pathway_visual_plot_ready <- reactive({
+    !is.null(rv_pathway_visual$plot)  # Returns TRUE if plot exists, FALSE otherwise
+  })
+  
+  # Ensure Shiny knows to use this value dynamically
+  outputOptions(output, "pathway_visual_plot_ready", suspendWhenHidden = FALSE)
   
   output$pathway_visual_plot <- renderPlot({
     req(pathway_visual_output(), input$pathway_visual_run)
@@ -2456,6 +2764,13 @@ server <- function(input, output, session) {
    p_out[[1]]
   
  })
+ 
+ output$lmer_plot_ready <- reactive({
+   !is.null(rv_lmer$plot)  # Returns TRUE if plot exists, FALSE otherwise
+ })
+ 
+ # Ensure Shiny knows to use this value dynamically
+ outputOptions(output, "lmer_plot_ready", suspendWhenHidden = FALSE)
 
  output$olink_lmer_plot_output <- renderPlot({
    req(olink_lmer_plot_out())
@@ -2465,7 +2780,7 @@ server <- function(input, output, session) {
  # download lmer plot
  output$download_lmer_options_ui <- renderUI({
    req(olink_lmer_plot_out())
-   h4("Download Options")
+   h4("Download lmer plots")
  })
  
  output$download_lmer_width_ui <- renderUI({
@@ -2654,6 +2969,12 @@ server <- function(input, output, session) {
    
  })
  
+ output$complex_heatmap_plot_ready <- reactive({
+   !is.null(rv_complex_heatmap$plot)  # Returns TRUE if plot exists, FALSE otherwise
+ })
+ 
+ # Ensure Shiny knows to use this value dynamically
+ outputOptions(output, "complex_heatmap_plot_ready", suspendWhenHidden = FALSE)
 
  output$complex_heatmap_output <- renderPlot({
    validate(need(complex_heatmap(), "check heatmap input"))
@@ -2710,7 +3031,7 @@ server <- function(input, output, session) {
  )
  
  output$complex_heatmap_help <- renderText({
-   req(test_output())
+   req(full_data())
    help_file <- help("Heatmap", package = "ComplexHeatmap")
    if (is.null(help_file)) return("Documentation not found.")
    
@@ -2734,7 +3055,7 @@ server <- function(input, output, session) {
        )
      })
    } else if (input$statistics_active_tab == "Heatmap") {
-     output$stats_download_options_ui <- renderUI({
+     output$complex_heatmap_download_options_ui <- renderUI({
        tagList(
          uiOutput("download_complex_heatmap_options_ui"),
          uiOutput("download_complex_heatmap_width_ui"),
@@ -2744,7 +3065,7 @@ server <- function(input, output, session) {
        )
      })
    } else if (input$statistics_active_tab == "lmer visualization") {
-     output$stats_download_options_ui <- renderUI({
+     output$lmer_plot_download_options_ui <- renderUI({
        tagList(
          uiOutput("download_lmer_options_ui"),
          uiOutput("download_lmer_width_ui"),
