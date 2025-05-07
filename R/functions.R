@@ -637,7 +637,7 @@ modified_olink_volcano_plot <- function(p.val_tbl,
         "Significant", "Non-significant")
     ) %>% 
     as.data.frame() %>%
-    dplyr::mutate(across(where(is.numeric), ~ round(., 3))) %>%
+    # dplyr::mutate(across(where(is.numeric), ~ round(., 3))) %>%
       dplyr::mutate(
         Threshold = ifelse(
           Threshold == "Non-significant",
@@ -688,7 +688,13 @@ modified_olink_volcano_plot <- function(p.val_tbl,
       show.legend = FALSE) + 
     ggplot2::geom_hline(yintercept = -log10(pval_cutoff), linetype = "dotted") + 
     OlinkAnalyze::set_plot_theme() +
-    ggplot2::scale_color_manual(values = color_palette, drop = FALSE)
+    ggplot2::scale_color_manual(values = color_palette, drop = FALSE) +
+    ggplot2::theme(
+      axis.title = element_text(size = 12),       # Axis title size
+      axis.text = element_text(size = 12),        # Axis tick label size
+      legend.text = element_text(size = 12),      # Legend text size
+      legend.title = element_text(size = 12)     # Legend title size
+    )
   
   return(volcano_plot)
 }
