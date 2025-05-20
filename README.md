@@ -1,9 +1,3 @@
----
-title: "completeOlink - Manual"
-
----
-
-
 # completeOlink - Manual
 
 This shiny app relies on the olink's OlinkAnalyze package ([https://github.com/Olink-Proteomics/OlinkRPackage/tree/master/OlinkAnalyze](https://github.com/Olink-Proteomics/OlinkRPackage/tree/master/OlinkAnalyze)). Functions have been customised/added for exploring and analysing the datasets.
