@@ -75,7 +75,7 @@ QQ plots help identify deviations from normal distribution.
 ![T-test plot](figures/fig9.png)  
 *Figure: Statistics tab - t-test*
 
-### > Two-level Outcome Factor
+### More than Two-level Outcome Factor
 
 ![ANOVA result](figures/fig10.png)  
 ![ANOVA plot](figures/fig11.png)  
