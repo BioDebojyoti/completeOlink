@@ -1,5 +1,4 @@
 # completeOlink 
-<!-- ![](figures/completeOlinkIcon.png = 250x200) -->
 <img src="figures/completeOlinkIcon.png" alt="completeOlink icon" style="width:50%; height:50%;">
 
 This shiny app relies on the olink's OlinkAnalyze package ([https://github.com/Olink-Proteomics/OlinkRPackage/tree/master/OlinkAnalyze](https://github.com/Olink-Proteomics/OlinkRPackage/tree/master/OlinkAnalyze)). Functions have been customised/added for exploring and analysing the datasets.
@@ -77,7 +76,7 @@ QQ plots help identify deviations from normal distribution.
 ![T-test plot](figures/fig9.png)  
 *Figure: Statistics tab - t-test*
 
-### > Two-level Outcome Factor
+### More than Two-level Outcome Factor
 
 ![ANOVA result](figures/fig10.png)  
 ![ANOVA plot](figures/fig11.png)  
